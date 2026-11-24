@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JEE p-Block Chemical Properties Lab & Reaction Simulator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: {
+              950: '#050914',
+              900: '#0b1120',
+              800: '#111827',
+              700: '#1e293b',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #050914;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+
+    /* Glassmorphic Card */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(51, 65, 85, 0.65);
+    }
+
+    /* JEE Trap Pulse */
+    @keyframes trapPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55); }
+      50% { box-shadow: 0 0 0 9px rgba(244, 63, 94, 0); }
+    }
+    .trap-pulse { animation: trapPulse 2s infinite; }
+
+    /* Beaker Bubble Animations */
+    @keyframes riseBubble {
+      0% { transform: translateY(0) scale(0.7); opacity: 0; }
+      25% { opacity: 0.85; }
+      100% { transform: translateY(-68px) scale(1.25); opacity: 0; }
+    }
+    .bubble {
+      position: absolute;
+      bottom: 8px;
+      border-radius: 9999px;
+      animation: riseBubble 2.2s infinite ease-in;
+    }
+    .bubble-1 { left: 22%; width: 8px; height: 8px; animation-delay: 0s; }
+    .bubble-2 { left: 48%; width: 11px; height: 11px; animation-delay: 0.7s; }
+    .bubble-3 { left: 70%; width: 7px; height: 7px; animation-delay: 1.3s; }
+    .bubble-4 { left: 36%; width: 6px; height: 6px; animation-delay: 1.7s; }
+
+    /* Liquid Wave */
+    @keyframes liquidGlow {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; }
+    }
+    .liquid-glow { animation: liquidGlow 2.4s ease-in-out infinite; }
+
+    /* Chemical Sub/Sup spacing */
+    sub, sup { font-size: 72%; line-height: 0; position: relative; vertical-align: baseline; }
+    sup { top: -0.45em; }
+    sub { bottom: -0.25em; }
+
+    /* Hide scrollbar on pill bars */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Ambient Neon Background Orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <div class="absolute -top-36 -left-36 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-36 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Sticky Header & 4-Tab Navigation -->
+  <header class="sticky top-0 z-40 bg-navy-950/90 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 font-mono font-extrabold text-navy-950 text-base">
+          Rxn
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">p-Block Chemical Properties Lab</h1>
+            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30">
+              JEE Main & Adv
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Hydrolysis, NaOH/HNO<sub>3</sub>, Oxides, Oxoacids & PYQ Reaction Drill</p>
+        </div>
+      </div>
+
+      <!-- Tab Switcher -->
+      <nav class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 no-scrollbar" id="mainTabs">
+        <button data-tab="lab" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10">
+          <span>🧪</span> Hydrolysis & Reactions
+        </button>
+        <button data-tab="oxides" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent">
+          <span>🧬</span> Oxides & Oxoacids
+        </button>
+        <button data-tab="tricks" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent">
+          <span>🧠</span> Hinglish Cheat-Codes
+        </button>
+        <button data-tab="drill" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent">
+          <span>🎯</span> JEE Reaction Drill
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: HYDROLYSIS & REACTION LAB                                    -->
+    <!-- =================================================================== -->
+    <section id="tab-lab" class="tab-panel space-y-6">
+      <!-- Category Switcher -->
+      <div class="flex flex-wrap items-center justify-between gap-3 glass-card rounded-2xl p-3 sm:p-4">
+        <div class="flex flex-wrap gap-2">
+          <button id="catHalidesBtn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm">
+            💧 Halides + Water (Hydrolysis Traps)
+          </button>
+          <button id="catAlkaliBtn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-slate-800/70 text-slate-400 border border-slate-700 hover:text-white">
+            🔥 Alkali (NaOH), Acid (HNO<sub>3</sub>) & B<sub>2</sub>H<sub>6</sub>
+          </button>
+        </div>
+        <span class="text-xs text-slate-400 hidden sm:inline">Click any reactant to simulate in the Reaction Chamber</span>
+      </div>
+
+      <!-- SUB-LAB A: HALIDES HYDROLYSIS -->
+      <div id="sublab-halides" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Reactant Selector Grid -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-cyan-400">Select Halide + H<sub>2</sub>O</h2>
+              <p class="text-xs text-slate-400">Red dot = High-frequency JEE Trap</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 text-[10px] font-bold border border-rose-500/30">
+              17 Reactions
+            </span>
+          </div>
+          <div id="halideButtonsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Right: Animated Reaction Chamber -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <!-- Chamber Header -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-800">
+              <div>
+                <span id="halideGroupTag" class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Group 13 Halide</span>
+                <h3 id="halideTitle" class="text-xl font-extrabold text-white mt-0.5">BF<sub>3</sub> + H<sub>2</sub>O (Partial Hydrolysis)</h3>
+              </div>
+              <div id="halideTrapBadge"></div>
+            </div>
+
+            <!-- Visual Animated Beaker + Balanced Equation -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center bg-navy-950/80 rounded-2xl p-4 sm:p-5 border border-slate-800/90 mb-5">
+              <!-- Animated Beaker -->
+              <div class="sm:col-span-4 flex flex-col items-center justify-center">
+                <div class="relative w-28 h-32 rounded-b-3xl rounded-t-md border-2 border-slate-500/70 bg-slate-900/60 overflow-hidden shadow-inner">
+                  <!-- Measurement Ticks -->
+                  <div class="absolute right-1.5 top-4 w-2 h-0.5 bg-slate-500/50"></div>
+                  <div class="absolute right-1.5 top-10 w-3 h-0.5 bg-slate-500/50"></div>
+                  <div class="absolute right-1.5 top-16 w-2 h-0.5 bg-slate-500/50"></div>
+                  <div class="absolute right-1.5 top-22 w-3 h-0.5 bg-slate-500/50"></div>
+                  <!-- Liquid Layer -->
+                  <div id="beakerLiquid" class="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-cyan-600/80 to-cyan-400/50 liquid-glow transition-all duration-500"></div>
+                  <!-- Bubbles Container -->
+                  <div id="beakerBubbles">
+                    <span class="bubble bubble-1 bg-cyan-200/80"></span>
+                    <span class="bubble bubble-2 bg-cyan-100/70"></span>
+                    <span class="bubble bubble-3 bg-white/70"></span>
+                    <span class="bubble bubble-4 bg-cyan-300/70"></span>
+                  </div>
+                  <!-- Status Overlay inside Beaker -->
+                  <div id="beakerStatusIcon" class="absolute inset-0 flex items-center justify-center text-2xl pointer-events-none"></div>
+                </div>
+                <span id="beakerCaption" class="mt-2.5 text-[11px] font-mono font-bold text-cyan-300 text-center">Active Hydrolysis</span>
+              </div>
+
+              <!-- Balanced Equation & Key Product -->
+              <div class="sm:col-span-8 space-y-3">
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Balanced Chemical Equation</span>
+                  <div id="halideEquation" class="mt-1.5 p-3.5 rounded-xl bg-slate-900/95 border border-cyan-500/30 font-mono text-sm sm:text-base font-bold text-white leading-relaxed">
+                    <!-- Populated via JS -->
+                  </div>
+                </div>
+                <div id="halideProductPills" class="flex flex-wrap gap-2">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Mechanism & Hinglish Reason -->
+            <div class="space-y-3">
+              <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-700/70">
+                <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1">🔬 Mechanism & Concept</div>
+                <p id="halideMechanism" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+              </div>
+              <div id="halideTrickBox" class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <div class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">⚡ Hinglish JEE Shortcut</div>
+                <p id="halideTrick" class="text-xs sm:text-sm text-amber-100 leading-relaxed"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-LAB B: ALKALI (NaOH), ACID (HNO3) & B2H6 -->
+      <div id="sublab-alkali" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Reactant List -->
+        <div class="lg:col-span-4 glass-card rounded-2xl p-4 sm:p-5">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-amber-400 mb-1">Select Reaction System</h2>
+          <p class="text-xs text-slate-400 mb-4">Toggle Cold/Dilute vs Hot/Conc to compare products!</p>
+          <div id="alkaliList" class="space-y-2">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Right: Dynamic Condition Chamber -->
+        <div class="lg:col-span-8 glass-card rounded-2xl p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <!-- Header + Condition Toggle -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-5 border-b border-slate-800">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span id="alkaliCategoryTag" class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Alkali Reaction</span>
+                  <span id="alkaliTrapTag"></span>
+                </div>
+                <h3 id="alkaliTitle" class="text-xl font-extrabold text-white mt-0.5">Cl<sub>2</sub> + NaOH</h3>
+              </div>
+
+              <!-- Interactive Condition Toggle Switch -->
+              <div id="conditionToggleWrap" class="flex items-center bg-navy-950 p-1 rounded-xl border border-slate-700 self-start sm:self-auto">
+                <button id="condBtnA" class="px-3.5 py-2 rounded-lg text-xs font-bold transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50">
+                  ❄️ Cold &amp; Dilute
+                </button>
+                <button id="condBtnB" class="px-3.5 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white border border-transparent">
+                  🔥 Hot &amp; Conc.
+                </button>
+              </div>
+            </div>
+
+            <!-- Equation Display -->
+            <div class="bg-navy-950/85 rounded-2xl p-5 border border-slate-800 mb-5">
+              <div class="flex items-center justify-between mb-2">
+                <span id="alkaliCondLabel" class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Condition: Cold &amp; Dilute NaOH</span>
+                <span id="alkaliDispropBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  Disproportionation
+                </span>
+              </div>
+              <div id="alkaliEquation" class="font-mono text-sm sm:text-lg font-bold text-white leading-relaxed py-2">
+                <!-- Populated via JS -->
+              </div>
+
+              <!-- Oxidation State Change Visual Bar -->
+              <div class="mt-4 pt-4 border-t border-slate-800/90">
+                <div class="text-[11px] font-semibold text-slate-400 mb-2">Oxidation State Shift (Redox Tracker):</div>
+                <div id="alkaliOxStates" class="flex flex-wrap items-center gap-2 font-mono text-xs sm:text-sm">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- JEE Exam Note -->
+            <div id="alkaliNoteBox" class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5">
+              <div class="text-xs font-bold uppercase tracking-wider text-amber-400">🎯 JEE Main &amp; Advanced Exam Note</div>
+              <p id="alkaliNote" class="text-xs sm:text-sm text-amber-100 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: OXIDES MATRIX & OXOACIDS VAULT                               -->
+    <!-- =================================================================== -->
+    <section id="tab-oxides" class="tab-panel hidden space-y-8">
+
+      <!-- SECTION A: p-BLOCK OXIDE NATURE EXPLORER -->
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Section A • Oxide Matrix</span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-white">p-Block Oxide Nature Explorer</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Kisi bhi oxide par click karke uski acid/base reaction aur JEE tip dekho</p>
+          </div>
+          <!-- Filter Pills -->
+          <div class="flex flex-wrap gap-1.5" id="oxideFilters">
+            <button data-filter="all" class="ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/50">All</button>
+            <button data-filter="amphoteric" class="ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-400">⭐ Amphoteric (JEE Fav)</button>
+            <button data-filter="acidic" class="ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-rose-300 border border-slate-700 hover:border-rose-400">Acidic</button>
+            <button data-filter="basic" class="ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-emerald-300 border border-slate-700 hover:border-emerald-400">Basic</button>
+            <button data-filter="neutral" class="ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-violet-300 border border-slate-700 hover:border-violet-400">Neutral</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Clickable Oxide Grid -->
+          <div id="oxideGrid" class="lg:col-span-7 grid grid-cols-3 sm:grid-cols-4 gap-2.5 content-start">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Selected Oxide Detail Panel -->
+          <div id="oxideDetailPanel" class="lg:col-span-5 bg-navy-950/85 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION B: OXOACIDS STRUCTURAL VAULT (P, S, Cl) -->
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Section B • Structural Vault</span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-white">Oxoacids of P, S &amp; Cl (SVG Structures)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Exact bonds, basicity (–OH count), P–H reducing bonds &amp; peroxy (–O–O–) linkages</p>
+          </div>
+
+          <!-- Family Switcher -->
+          <div class="flex gap-2" id="oxoFamilyBtns">
+            <button data-fam="P" class="oxo-fam-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/50">Phosphorus (P)</button>
+            <button data-fam="S" class="oxo-fam-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white">Sulfur (S)</button>
+            <button data-fam="Cl" class="oxo-fam-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white">Chlorine (Cl)</button>
+          </div>
+        </div>
+
+        <!-- Acid Selector Pills -->
+        <div id="oxoAcidPills" class="flex flex-wrap gap-2 mb-5">
+          <!-- Populated via JS -->
+        </div>
+
+        <!-- Structure SVG + Stats Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <!-- Inline SVG Diagram Box -->
+          <div class="lg:col-span-6 bg-navy-950/90 rounded-2xl border border-slate-800 p-4 flex flex-col items-center justify-center min-h-[270px]">
+            <div class="flex items-center justify-between w-full mb-2 px-1">
+              <span id="oxoSvgTitle" class="text-xs font-bold text-slate-300">Hypophosphorous Acid</span>
+              <span id="oxoSvgFormula" class="px-2.5 py-0.5 rounded-lg bg-slate-800 text-cyan-300 font-mono text-xs font-bold border border-slate-700">H<sub>3</sub>PO<sub>2</sub></span>
+            </div>
+            <div id="oxoSvgContainer" class="w-full flex items-center justify-center py-2">
+              <!-- Accurate Inline SVG injected by JS -->
+            </div>
+          </div>
+
+          <!-- Stats & JEE Highlights -->
+          <div class="lg:col-span-6 flex flex-col justify-between space-y-4">
+            <!-- 4 Live Stat Badges -->
+            <div class="grid grid-cols-2 gap-3" id="oxoStatBadges">
+              <!-- Populated via JS -->
+            </div>
+
+            <!-- Family Acidic Strength Order -->
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-cyan-500/30">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-400 mb-1">Family Acidic Strength Order (JEE)</div>
+              <div id="oxoFamilyOrder" class="font-mono text-xs sm:text-sm font-bold text-white"></div>
+            </div>
+
+            <!-- JEE Highlight Note -->
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1">⚠️ JEE Exam Highlight</div>
+              <p id="oxoJeeHighlight" class="text-xs sm:text-sm text-amber-100 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: HINGLISH CHEAT-CODES & JEE TRICKS                            -->
+    <!-- =================================================================== -->
+    <section id="tab-tricks" class="tab-panel hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Memory Vault</span>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-white">Hinglish Cheat-Codes &amp; JEE Tricks</h2>
+          <p class="text-xs sm:text-sm text-slate-400">Har card par click karke uska quick JEE example &amp; logic expand karo!</p>
+        </div>
+      </div>
+
+      <div id="tricksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Populated via JS -->
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: JEE CHEMICAL REACTION DRILL (12 PYQ MCQs)                    -->
+    <!-- =================================================================== -->
+    <section id="tab-drill" class="tab-panel hidden">
+      <div class="max-w-3xl mx-auto glass-card rounded-2xl p-5 sm:p-7">
+        <!-- Header & Scoreboard -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-800">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">JEE Main &amp; Advanced PYQ Drill</span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-white">Chemical Reaction Challenge</h2>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <div class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold">
+              Q: <span id="quizCounter" class="font-mono text-cyan-300 font-bold">1 / 12</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs font-semibold text-emerald-300">
+              Score: <span id="quizScore" class="font-mono font-bold">0</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-semibold text-amber-300">
+              🔥 <span id="quizStreak" class="font-mono font-bold">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-6">
+          <div id="quizProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-300" style="width: 8.33%"></div>
+        </div>
+
+        <!-- Question View -->
+        <div id="quizActiveView" class="space-y-5">
+          <div>
+            <span id="quizTopicTag" class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 mb-2">
+              Hydrolysis Trap
+            </span>
+            <h3 id="quizQuestionText" class="text-base sm:text-lg font-bold text-white leading-snug"></h3>
+          </div>
+
+          <!-- Options Grid -->
+          <div id="quizOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Instant Feedback Box -->
+          <div id="quizFeedback" class="hidden rounded-xl p-4 border text-xs sm:text-sm leading-relaxed">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Next Button -->
+          <div class="flex justify-end pt-1">
+            <button id="quizNextBtn" class="hidden px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-navy-950 font-extrabold text-sm shadow-lg shadow-cyan-500/20 transition">
+              Next Question →
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary View -->
+        <div id="quizSummaryView" class="hidden text-center py-6 space-y-4">
+          <div class="text-5xl">🏆</div>
+          <h3 class="text-2xl font-extrabold text-white">Reaction Drill Complete!</h3>
+          <p id="quizSummaryStats" class="text-slate-300 text-sm sm:text-base"></p>
+          <div id="quizSummaryGrade" class="inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></div>
+          <div class="pt-2">
+            <button id="quizRestartBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-navy-950 font-extrabold text-sm shadow-lg shadow-cyan-500/25 hover:scale-105 transition">
+              Restart 12-Question Drill
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 py-6 mt-4 border-t border-slate-800/60 text-center text-xs text-slate-500">
+    Strictly NCERT-aligned <span class="text-slate-300 font-semibold">JEE Main &amp; Advanced p-Block Chemical Properties Lab</span>. Practice daily for +12 guaranteed Inorganic marks!
+  </footer>
+
+  <!-- =================================================================== -->
+  <!-- JAVASCRIPT DATABASE & INTERACTIVE ENGINE                            -->
+  <!-- =================================================================== -->
+  <script>
+    // -------------------------------------------------------------------
+    // 1. TAB 1A DATABASE: HALIDES + WATER (HYDROLYSIS TRAPS)
+    // -------------------------------------------------------------------
+    const HALIDE_REACTIONS = [
+      {
+        id: "bf3",
+        label: "BF<sub>3</sub>",
+        group: "Group 13 Halide",
+        title: "BF<sub>3</sub> + H<sub>2</sub>O (Partial Hydrolysis)",
+        trap: true,
+        status: "partial",
+        liquidClass: "from-amber-600/80 to-amber-400/50",
+        caption: "Partial Hydrolysis → H[BF<sub>4</sub>]",
+        equation: "4BF<sub>3</sub> + 3H<sub>2</sub>O → H<sub>3</sub>BO<sub>3</sub> + 3H<sup>+</sup>[BF<sub>4</sub>]<sup>−</sup>",
+        products: ["H<sub>3</sub>BO<sub>3</sub> (Boric Acid)", "H[BF<sub>4</sub>] (Fluoroboric Acid)"],
+        mechanism: "Unlike BCl<sub>3</sub>, BF<sub>3</sub> undergoes PARTIAL hydrolysis. The HF formed immediately reacts with unreacted BF<sub>3</sub> to form the stable tetrahedral complex ion [BF<sub>4</sub>]<sup>−</sup> because the B–F bond is extremely strong.",
+        trick: "BCl<sub>3</sub> poora toot kar H<sub>3</sub>BO<sub>3</sub> + HCl deta hai, par BF<sub>3</sub> mein HF wapas BF<sub>3</sub> ko pakad kar H[BF<sub>4</sub>] bana leta hai! JEE ka favorite partial hydrolysis trap!"
+      },
+      {
+        id: "bcl3",
+        label: "BCl<sub>3</sub>",
+        group: "Group 13 Halide",
+        title: "BCl<sub>3</sub> + H<sub>2</sub>O (Complete Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-cyan-600/80 to-cyan-400/50",
+        caption: "Vigorous Complete Hydrolysis",
+        equation: "BCl<sub>3</sub> + 3H<sub>2</sub>O → H<sub>3</sub>BO<sub>3</sub> + 3HCl",
+        products: ["H<sub>3</sub>BO<sub>3</sub> (White solid)", "3HCl (White fumes)"],
+        mechanism: "Boron has a vacant 2p orbital. Water's lone pair attacks the vacant 2p orbital of Boron, displacing all three Cl<sup>−</sup> ions smoothly to form orthoboric acid (H<sub>3</sub>BO<sub>3</sub>) and HCl.",
+        trick: "Simple rule: Vacant 2p orbital hai + B–Cl bond weak hai → poora hydrolysis hoga → B(OH)<sub>3</sub> + 3HCl."
+      },
+      {
+        id: "ccl4",
+        label: "CCl<sub>4</sub>",
+        group: "Group 14 Halide",
+        title: "CCl<sub>4</sub> + H<sub>2</sub>O (NO Hydrolysis!)",
+        trap: true,
+        status: "none",
+        liquidClass: "from-slate-700/80 to-slate-600/50",
+        caption: "🚫 NO REACTION (Inert)",
+        equation: "CCl<sub>4</sub> + H<sub>2</sub>O → No Hydrolysis (at room temp)",
+        products: ["No Reaction", "Immiscible oily layer"],
+        mechanism: "Carbon belongs to Period 2 and has NO vacant d-orbitals to accept the lone pair of electrons from H<sub>2</sub>O. Thus, it cannot expand its covalency beyond 4.",
+        trick: "Carbon ke paas khaali d-orbital hi nahi hai! Paani aata hai par baithne ki jagah nahi milti → NO Hydrolysis!"
+      },
+      {
+        id: "sicl4",
+        label: "SiCl<sub>4</sub>",
+        group: "Group 14 Halide",
+        title: "SiCl<sub>4</sub> + H<sub>2</sub>O (Complete Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-cyan-600/80 to-blue-400/50",
+        caption: "Rapid Hydrolysis (3d Orbital)",
+        equation: "SiCl<sub>4</sub> + 4H<sub>2</sub>O → Si(OH)<sub>4</sub> (Silicic acid) + 4HCl",
+        products: ["Si(OH)<sub>4</sub> / H<sub>4</sub>SiO<sub>4</sub>", "4HCl fumes"],
+        mechanism: "Silicon (Period 3) has vacant 3d-orbitals. H<sub>2</sub>O coordinates to Si forming a 5-coordinate intermediate, followed by loss of HCl, repeating 4 times to give silicic acid.",
+        trick: "CCl<sub>4</sub> fail ho gaya par SiCl<sub>4</sub> ke paas vacant 3d-orbital hai → turant Si(OH)<sub>4</sub> + 4HCl banata hai!"
+      },
+      {
+        id: "ncl3",
+        label: "NCl<sub>3</sub>",
+        group: "Group 15 Halide",
+        title: "NCl<sub>3</sub> + H<sub>2</sub>O (Electronegativity Reversal!)",
+        trap: true,
+        status: "active",
+        liquidClass: "from-rose-600/80 to-amber-400/50",
+        caption: "⚠️ Gives NH<sub>3</sub> + HOCl!",
+        equation: "NCl<sub>3</sub> + 3H<sub>2</sub>O → NH<sub>3</sub> + 3HOCl",
+        products: ["NH<sub>3</sub> (Ammonia)", "3HOCl (Hypochlorous acid)"],
+        mechanism: "Nitrogen has no vacant d-orbital, so H<sub>2</sub>O attacks the vacant 3d-orbital of Chlorine instead! Also, N is slightly more electronegative than Cl (N<sup>δ−</sup>–Cl<sup>δ+</sup>), so H<sup>+</sup> goes to N (giving NH<sub>3</sub>) and OH<sup>−</sup> goes to Cl (giving HOCl).",
+        trick: "HUGE JEE TRAP! Bacche PCl<sub>3</sub> dekh kar HNO<sub>2</sub> + HCl tick kar dete hain. Yaad rakho: NCl<sub>3</sub> mein Cl par + charge maano → NH<sub>3</sub> + 3HOCl!"
+      },
+      {
+        id: "pcl3",
+        label: "PCl<sub>3</sub>",
+        group: "Group 15 Halide",
+        title: "PCl<sub>3</sub> + H<sub>2</sub>O (Complete Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-emerald-600/80 to-cyan-400/50",
+        caption: "Gives H<sub>3</sub>PO<sub>3</sub> + HCl",
+        equation: "PCl<sub>3</sub> + 3H<sub>2</sub>O → H<sub>3</sub>PO<sub>3</sub> + 3HCl",
+        products: ["H<sub>3</sub>PO<sub>3</sub> (Phosphorous acid)", "3HCl"],
+        mechanism: "Phosphorus has vacant 3d-orbitals and is less electronegative than Cl (P<sup>δ+</sup>–Cl<sup>δ−</sup>). H<sub>2</sub>O attacks P directly, giving H<sub>3</sub>PO<sub>3</sub> (dibasic acid) and 3HCl.",
+        trick: "PCl<sub>3</sub> mein P (+3) hai → +3 wala oxoacid H<sub>3</sub>PO<sub>3</sub> + 3HCl milega (oxidation state same rehta hai)."
+      },
+      {
+        id: "pcl5_p",
+        label: "PCl<sub>5</sub> (Partial)",
+        group: "Group 15 Halide",
+        title: "PCl<sub>5</sub> + H<sub>2</sub>O (Moist Air / Partial)",
+        trap: false,
+        status: "partial",
+        liquidClass: "from-amber-500/80 to-yellow-400/50",
+        caption: "Step 1: Forms POCl<sub>3</sub>",
+        equation: "PCl<sub>5</sub> + H<sub>2</sub>O → POCl<sub>3</sub> + 2HCl",
+        products: ["POCl<sub>3</sub> (Phosphoryl chloride)", "2HCl"],
+        mechanism: "In moist air (limited water), PCl<sub>5</sub> loses 2 Cl atoms and gains 1 O atom to form POCl<sub>3</sub> and dense white fumes of HCl.",
+        trick: "1 H<sub>2</sub>O daalo → 2 HCl nikaalo → bacha POCl<sub>3</sub>!"
+      },
+      {
+        id: "pcl5_c",
+        label: "PCl<sub>5</sub> (Complete)",
+        group: "Group 15 Halide",
+        title: "PCl<sub>5</sub> + Excess H<sub>2</sub>O (Complete)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-emerald-600/80 to-teal-400/50",
+        caption: "Final Product: H<sub>3</sub>PO<sub>4</sub>",
+        equation: "PCl<sub>5</sub> + 4H<sub>2</sub>O → H<sub>3</sub>PO<sub>4</sub> + 5HCl",
+        products: ["H<sub>3</sub>PO<sub>4</sub> (Phosphoric acid)", "5HCl"],
+        mechanism: "POCl<sub>3</sub> further hydrolyzes with 3 more water molecules to finally yield orthophosphoric acid (H<sub>3</sub>PO<sub>4</sub>, +5 state) and 5 HCl.",
+        trick: "PCl<sub>5</sub> mein P (+5) hai → complete hydrolysis par +5 wala acid H<sub>3</sub>PO<sub>4</sub> + 5HCl milega!"
+      },
+      {
+        id: "bicl3",
+        label: "BiCl<sub>3</sub>",
+        group: "Group 15 Halide",
+        title: "BiCl<sub>3</sub> + H<sub>2</sub>O (Turbidity Trap)",
+        trap: true,
+        status: "partial",
+        liquidClass: "from-slate-200/80 to-slate-400/60",
+        caption: "White Turbidity (BiOCl ↓)",
+        equation: "BiCl<sub>3</sub> + H<sub>2</sub>O ⇌ BiOCl↓ (white ppt) + 2HCl",
+        products: ["BiOCl↓ (Bismuth oxychloride)", "2HCl"],
+        mechanism: "BiCl<sub>3</sub> (and SbCl<sub>3</sub>) undergoes partial hydrolysis to form an insoluble white precipitate/turbidity of BiOCl (pearl white). Adding dil. HCl reverses the equilibrium and clears the solution!",
+        trick: "Qualitative Analysis + p-Block combo! BiCl<sub>3</sub> + H<sub>2</sub>O → white ppt of BiOCl (HCl daalne par wapas transparent ho jata hai)."
+      },
+      {
+        id: "sf4",
+        label: "SF<sub>4</sub>",
+        group: "Group 16 Halide",
+        title: "SF<sub>4</sub> + H<sub>2</sub>O (Vigorous Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-cyan-600/80 to-indigo-400/50",
+        caption: "See-Saw Geometry → Exposed S",
+        equation: "SF<sub>4</sub> + 2H<sub>2</sub>O → SO<sub>2</sub> + 4HF",
+        products: ["SO<sub>2</sub> (or H<sub>2</sub>SO<sub>3</sub>)", "4HF"],
+        mechanism: "SF<sub>4</sub> has a see-saw shape with an exposed Sulfur atom and vacant 3d-orbitals. Water easily attacks Sulfur, giving SO<sub>2</sub> (S remains +4) and 4HF.",
+        trick: "SF<sub>4</sub> khula hua (see-saw) hai, isliye paani attack kar leta hai → SO<sub>2</sub> + 4HF."
+      },
+      {
+        id: "sf6",
+        label: "SF<sub>6</sub>",
+        group: "Group 16 Halide",
+        title: "SF<sub>6</sub> + H<sub>2</sub>O (Sterically Shielded!)",
+        trap: true,
+        status: "none",
+        liquidClass: "from-slate-700/80 to-slate-600/50",
+        caption: "🚫 NO REACTION (Steric Shield)",
+        equation: "SF<sub>6</sub> + H<sub>2</sub>O → No Hydrolysis (Kinetically Inert)",
+        products: ["No Reaction", "Chemically Inert Gas"],
+        mechanism: "Even though Sulfur has vacant d-orbitals and hydrolysis is thermodynamically favorable, 6 Fluorine atoms tightly surround Sulfur in an octahedral cage (steric hindrance), blocking water molecules from attacking!",
+        trick: "MOST ASKED JEE QUESTION! CCl<sub>4</sub> = No d-orbital, par SF<sub>6</sub> = Steric hindrance (6 F atoms ka bodyguard shield)! Isliye SF<sub>6</sub> hydrolyze nahi hota."
+      },
+      {
+        id: "xef2",
+        label: "XeF<sub>2</sub>",
+        group: "Group 18 Fluoride",
+        title: "XeF<sub>2</sub> + H<sub>2</sub>O (Redox Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-violet-600/80 to-cyan-400/50",
+        caption: "Evolves Xe + O<sub>2</sub> Gas",
+        equation: "2XeF<sub>2</sub> + 2H<sub>2</sub>O → 2Xe↑ + 4HF + O<sub>2</sub>↑",
+        products: ["Xe (0)", "O<sub>2</sub> gas", "4HF"],
+        mechanism: "XeF<sub>2</sub> acts as a strong oxidizing agent. Xe(+2) is reduced to Xe(0) while water's O(−2) is oxidized to O<sub>2</sub>(0).",
+        trick: "XeF<sub>2</sub> sabse seedha hai: paani mein daalo → Xe + HF + O<sub>2</sub> gas nikal jati hai!"
+      },
+      {
+        id: "xef4",
+        label: "XeF<sub>4</sub>",
+        group: "Group 18 Fluoride",
+        title: "XeF<sub>4</sub> + H<sub>2</sub>O (Disproportionation Trap!)",
+        trap: true,
+        status: "active",
+        liquidClass: "from-rose-600/80 to-violet-500/50",
+        caption: "⚠️ Disproportionates to Xe + XeO<sub>3</sub>",
+        equation: "6XeF<sub>4</sub> + 12H<sub>2</sub>O → 4Xe + 2XeO<sub>3</sub> + 24HF + 3O<sub>2</sub>",
+        products: ["Xe (0)", "XeO<sub>3</sub> (+6, explosive)", "HF + O<sub>2</sub>"],
+        mechanism: "XeF<sub>4</sub> undergoes DISPROPORTIONATION! Xe(+4) simultaneously reduces to Xe(0) and oxidizes to XeO<sub>3</sub>(+6), along with O<sub>2</sub> and HF.",
+        trick: "JEE SUPER TRAP! XeF<sub>4</sub> mein Xe (+4) beech mein hai, toh wo 0 (Xe) aur +6 (XeO<sub>3</sub>) dono mein toot jata hai!"
+      },
+      {
+        id: "xef6_p",
+        label: "XeF<sub>6</sub> (Partial)",
+        group: "Group 18 Fluoride",
+        title: "XeF<sub>6</sub> + Limited H<sub>2</sub>O (Partial)",
+        trap: false,
+        status: "partial",
+        liquidClass: "from-violet-500/80 to-amber-400/50",
+        caption: "Non-Redox → XeOF<sub>4</sub> / XeO<sub>2</sub>F<sub>2</sub>",
+        equation: "XeF<sub>6</sub> + H<sub>2</sub>O → XeOF<sub>4</sub> + 2HF  |  XeF<sub>6</sub> + 2H<sub>2</sub>O → XeO<sub>2</sub>F<sub>2</sub> + 4HF",
+        products: ["XeOF<sub>4</sub> (Square pyramidal)", "XeO<sub>2</sub>F<sub>2</sub> (See-saw)"],
+        mechanism: "Non-redox hydrolysis! Every 1 H<sub>2</sub>O replaces 2 F atoms with 1 O atom while Xenon stays in the +6 oxidation state.",
+        trick: "1 H<sub>2</sub>O = 1 O andar, 2 F bahar → XeOF<sub>4</sub>. 2 H<sub>2</sub>O → XeO<sub>2</sub>F<sub>2</sub>. Oxidation state +6 hi rahega!"
+      },
+      {
+        id: "xef6_c",
+        label: "XeF<sub>6</sub> (Complete)",
+        group: "Group 18 Fluoride",
+        title: "XeF<sub>6</sub> + Excess H<sub>2</sub>O (Complete)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-violet-600/80 to-fuchsia-400/50",
+        caption: "Non-Redox → XeO<sub>3</sub> (+6)",
+        equation: "XeF<sub>6</sub> + 3H<sub>2</sub>O → XeO<sub>3</sub> + 6HF",
+        products: ["XeO<sub>3</sub> (Pyramidal, +6)", "6HF"],
+        mechanism: "Purely non-redox complete hydrolysis! No O<sub>2</sub> or Xe gas is evolved here; all Xe(+6) converts cleanly to XeO<sub>3</sub>.",
+        trick: "Yaad rakho: XeF<sub>6</sub> ki hydrolysis NON-REDOX hai (no O<sub>2</sub> gas!). Sirf XeO<sub>3</sub> + 6HF banta hai."
+      },
+      {
+        id: "icl",
+        label: "ICl",
+        group: "Interhalogen (XX')",
+        title: "ICl + H<sub>2</sub>O (Interhalogen Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-amber-600/80 to-rose-400/50",
+        caption: "Smaller Halogen → HX",
+        equation: "ICl + H<sub>2</sub>O → HCl + HOI",
+        products: ["HCl (from smaller Cl)", "HOI (from larger I)"],
+        mechanism: "In interhalogen XX' (where X is larger & less electronegative), X carries δ+ and X' carries δ−. Thus H<sup>+</sup> goes to X' (giving HX') and OH<sup>−</sup> goes to X (giving HOX).",
+        trick: "Golden Interhalogen Rule: Chhote halogen (X') ka HX' banao, aur bade halogen (X) ka oxoacid (same oxidation state)!"
+      },
+      {
+        id: "brf3",
+        label: "BrF<sub>3</sub>",
+        group: "Interhalogen (XX'<sub>3</sub>)",
+        title: "BrF<sub>3</sub> + H<sub>2</sub>O (Interhalogen Hydrolysis)",
+        trap: false,
+        status: "active",
+        liquidClass: "from-rose-600/80 to-orange-400/50",
+        caption: "Br(+3) → HBrO<sub>2</sub> + 3HF",
+        equation: "BrF<sub>3</sub> + 2H<sub>2</sub>O → HBrO<sub>2</sub> + 3HF",
+        products: ["3HF (smaller F)", "HBrO<sub>2</sub> (Bromous acid, +3)"],
+        mechanism: "Br is in +3 state and less electronegative than F. Smaller F forms 3HF, while larger Br forms the corresponding +3 oxoacid (HBrO<sub>2</sub>).",
+        trick: "Same trick: Chhote F ka 3HF, aur bade Br(+3) ka +3 wala oxoacid HBrO<sub>2</sub>!"
+      }
+    ];
+
+    // -------------------------------------------------------------------
+    // 2. TAB 1B DATABASE: ALKALI (NaOH), ACID (HNO3) & B2H6
+    // -------------------------------------------------------------------
+    const ALKALI_REACTIONS = [
+      {
+        id: "cl2_naoh",
+        label: "Cl<sub>2</sub> + NaOH",
+        category: "Halogen + Alkali",
+        trap: false,
+        condALabel: "❄️ Cold & Dilute",
+        condBLabel: "🔥 Hot & Conc.",
+        condA: {
+          title: "Cold & Dilute NaOH",
+          badge: "Disproportionation",
+          badgeType: "emerald",
+          equation: "Cl<sub>2</sub> + 2NaOH (cold, dil.) → NaCl + NaOCl + H<sub>2</sub>O",
+          oxStates: ["Cl<sub>2</sub> (0)", "→", "NaCl (−1)", "+", "NaOCl (+1)"],
+          note: "Cold & dilute NaOH ke sath Chlorine 0 se −1 (chloride) aur +1 (hypochlorite, bleaching agent) mein disproportionate hota hai."
+        },
+        condB: {
+          title: "Hot & Concentrated NaOH",
+          badge: "Disproportionation",
+          badgeType: "emerald",
+          equation: "3Cl<sub>2</sub> + 6NaOH (hot, conc.) → 5NaCl + NaClO<sub>3</sub> + 3H<sub>2</sub>O",
+          oxStates: ["Cl<sub>2</sub> (0)", "→", "NaCl (−1)", "+", "NaClO<sub>3</sub> (+5)"],
+          note: "Hot & conc. NaOH mein Cl<sub>2</sub> seedha −1 aur +5 (chlorate, NaClO<sub>3</sub>) deta hai. Ratio yaad rakho: 5 NaCl : 1 NaClO<sub>3</sub>!"
+        }
+      },
+      {
+        id: "f2_naoh",
+        label: "F<sub>2</sub> + NaOH",
+        category: "Halogen + Alkali",
+        trap: true,
+        condALabel: "❄️ Cold & Dilute",
+        condBLabel: "🔥 Hot & Conc.",
+        condA: {
+          title: "Cold & Dilute NaOH (2%)",
+          badge: "⚠️ NO Disproportionation!",
+          badgeType: "rose",
+          equation: "2F<sub>2</sub> + 2NaOH (dil.) → 2NaF + OF<sub>2</sub>↑ + H<sub>2</sub>O",
+          oxStates: ["F<sub>2</sub> (0)", "→", "NaF (−1)", "+", "OF<sub>2</sub> (F is still −1!)"],
+          note: "HUGE JEE TRAP! Fluorine kabhi +1 ya +5 state nahi dikha sakta (most electronegative element). Isliye NO disproportionation! Cold dil. NaOH mein OF<sub>2</sub> (oxygen difluoride) banta hai."
+        },
+        condB: {
+          title: "Hot & Concentrated NaOH",
+          badge: "⚠️ NO Disproportionation!",
+          badgeType: "rose",
+          equation: "2F<sub>2</sub> + 4NaOH (conc.) → 4NaF + O<sub>2</sub>↑ + 2H<sub>2</sub>O",
+          oxStates: ["F<sub>2</sub> (0)", "→", "NaF (−1)", "+", "O<sub>2</sub> (O oxidized −2 → 0)"],
+          note: "Hot & conc. NaOH mein OF<sub>2</sub> bhi nahi banta, seedha O<sub>2</sub> gas release hoti hai! Dono cases mein Fluorine sirf 0 se −1 mein reduce hota hai."
+        }
+      },
+      {
+        id: "p4_naoh",
+        label: "P<sub>4</sub> + NaOH",
+        category: "White Phosphorus + Alkali",
+        trap: true,
+        condALabel: "🔥 Warm NaOH (CO<sub>2</sub> atm)",
+        condBLabel: "💡 JEE Key Properties",
+        condA: {
+          title: "White P<sub>4</sub> + Warm NaOH (Inert CO<sub>2</sub> atmosphere)",
+          badge: "Disproportionation",
+          badgeType: "emerald",
+          equation: "P<sub>4</sub> + 3NaOH + 3H<sub>2</sub>O → PH<sub>3</sub>↑ + 3NaH<sub>2</sub>PO<sub>2</sub>",
+          oxStates: ["P<sub>4</sub> (0)", "→", "PH<sub>3</sub> (−3)", "+", "NaH<sub>2</sub>PO<sub>2</sub> (+1)"],
+          note: "NCERT lab method for Phosphine (PH<sub>3</sub>)! White P<sub>4</sub> hi react karta hai (Red P nahi). Inert CO<sub>2</sub> atmosphere zaroori hai taaki PH<sub>3</sub> hawa mein aag na pakad le."
+        },
+        condB: {
+          title: "Product Structure & Basicity Note",
+          badge: "JEE Bonus Check",
+          badgeType: "amber",
+          equation: "NaH<sub>2</sub>PO<sub>2</sub> (Sodium hypophosphite) ← Salt of Monobasic H<sub>3</sub>PO<sub>2</sub>",
+          oxStates: ["P (+1)", "→", "2 P–H bonds", "+", "Reducing Salt"],
+          note: "NaH<sub>2</sub>PO<sub>2</sub> ek NORMAL salt hai, acidic salt nahi! Kyunki H<sub>3</sub>PO<sub>2</sub> monobasic hai, iske bache hue dono H atoms direct P se jude hain aur ionize nahi hote."
+        }
+      },
+      {
+        id: "s8_naoh",
+        label: "S<sub>8</sub> + NaOH",
+        category: "Sulfur + Alkali",
+        trap: false,
+        condALabel: "🔥 Hot & Conc. NaOH",
+        condBLabel: "💡 Oxidation Shift",
+        condA: {
+          title: "Sulfur + Hot Concentrated NaOH",
+          badge: "Disproportionation",
+          badgeType: "emerald",
+          equation: "S<sub>8</sub> + 12NaOH (hot) → 4Na<sub>2</sub>S + 2Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub> + 6H<sub>2</sub>O",
+          oxStates: ["S<sub>8</sub> (0)", "→", "Na<sub>2</sub>S (−2)", "+", "Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub> (+2 avg)"],
+          note: "Sulfur hot NaOH mein sulfide (Na<sub>2</sub>S) aur thiosulphate (Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub>, hypo) mein disproportionate hota hai."
+        },
+        condB: {
+          title: "Compare with P<sub>4</sub> & Cl<sub>2</sub> + NaOH",
+          badge: "Pattern Hack",
+          badgeType: "amber",
+          equation: "P<sub>4</sub> → PH<sub>3</sub> + H<sub>2</sub>PO<sub>2</sub><sup>−</sup>  |  S<sub>8</sub> → S<sup>2−</sup> + S<sub>2</sub>O<sub>3</sub><sup>2−</sup>  |  Cl<sub>2</sub> → Cl<sup>−</sup> + ClO<sup>−</sup>/ClO<sub>3</sub><sup>−</sup>",
+          oxStates: ["Non-metal (0)", "→", "Lowest OS", "+", "Oxoanion"],
+          note: "Teeno non-metals (P<sub>4</sub>, S<sub>8</sub>, Cl<sub>2</sub>) alkali mein disproportionate hote hain — sirf F<sub>2</sub> exception hai!"
+        }
+      },
+      {
+        id: "cu_hno3",
+        label: "Cu + HNO<sub>3</sub>",
+        category: "Metal + Nitric Acid",
+        trap: true,
+        condALabel: "❄️ Dilute HNO<sub>3</sub>",
+        condBLabel: "🔥 Conc. HNO<sub>3</sub>",
+        condA: {
+          title: "Copper + Dilute HNO<sub>3</sub>",
+          badge: "Gives NO (Colourless Gas)",
+          badgeType: "cyan",
+          equation: "3Cu + 8HNO<sub>3</sub> (dil.) → 3Cu(NO<sub>3</sub>)<sub>2</sub> + 2NO↑ + 4H<sub>2</sub>O",
+          oxStates: ["Cu (0 → +2)", "|", "N (+5 → +2 in NO)"],
+          note: "Dilute HNO<sub>3</sub> ke sath Copper nitric oxide (NO, colourless gas jo hawa mein brown NO<sub>2</sub> ban jati hai) release karta hai."
+        },
+        condB: {
+          title: "Copper + Concentrated HNO<sub>3</sub>",
+          badge: "Gives NO<sub>2</sub> (Brown Fumes)",
+          badgeType: "rose",
+          equation: "Cu + 4HNO<sub>3</sub> (conc.) → Cu(NO<sub>3</sub>)<sub>2</sub> + 2NO<sub>2</sub>↑ + 2H<sub>2</sub>O",
+          oxStates: ["Cu (0 → +2)", "|", "N (+5 → +4 in NO<sub>2</sub>)"],
+          note: "Conc. HNO<sub>3</sub> ke sath chahe Cu ho ya Zn, hamesha brown fumes of NO<sub>2</sub> gas hi nikalti hai!"
+        }
+      },
+      {
+        id: "zn_hno3",
+        label: "Zn + HNO<sub>3</sub>",
+        category: "Metal + Nitric Acid",
+        trap: true,
+        condALabel: "❄️ Dilute HNO<sub>3</sub>",
+        condBLabel: "🔥 Conc. HNO<sub>3</sub>",
+        condA: {
+          title: "Zinc + Dilute HNO<sub>3</sub>",
+          badge: "⚠️ Gives N<sub>2</sub>O (Laughing Gas)",
+          badgeType: "rose",
+          equation: "4Zn + 10HNO<sub>3</sub> (dil.) → 4Zn(NO<sub>3</sub>)<sub>2</sub> + N<sub>2</sub>O↑ + 5H<sub>2</sub>O",
+          oxStates: ["Zn (0 → +2)", "|", "N (+5 → +1 in N<sub>2</sub>O)"],
+          note: "JEE CLASSIC! Zn, Cu se zyada reactive (stronger reducing agent) hai, isliye dilute HNO<sub>3</sub> ko +2 (NO) ki jagah aur neeche +1 (N<sub>2</sub>O, laughing gas) tak reduce kar deta hai!"
+        },
+        condB: {
+          title: "Zinc + Concentrated HNO<sub>3</sub>",
+          badge: "Gives NO<sub>2</sub> (Brown Fumes)",
+          badgeType: "amber",
+          equation: "Zn + 4HNO<sub>3</sub> (conc.) → Zn(NO<sub>3</sub>)<sub>2</sub> + 2NO<sub>2</sub>↑ + 2H<sub>2</sub>O",
+          oxStates: ["Zn (0 → +2)", "|", "N (+5 → +4 in NO<sub>2</sub>)"],
+          note: "Conc. HNO<sub>3</sub> ke sath Zn bhi NO<sub>2</sub> hi deta hai. Shortcut: Conc. HNO<sub>3</sub> + Cu/Zn = hamesha NO<sub>2</sub>!"
+        }
+      },
+      {
+        id: "b2h6_nh3",
+        label: "B<sub>2</sub>H<sub>6</sub> + NH<sub>3</sub>",
+        category: "Diborane + Ammonia",
+        trap: true,
+        condALabel: "❄️ Low Temp (Excess NH<sub>3</sub>)",
+        condBLabel: "🔥 High Temp (473 K)",
+        condA: {
+          title: "Low Temperature (Unsymmetrical Cleavage)",
+          badge: "Ionic Adduct",
+          badgeType: "cyan",
+          equation: "B<sub>2</sub>H<sub>6</sub> + 2NH<sub>3</sub> → [BH<sub>2</sub>(NH<sub>3</sub>)<sub>2</sub>]<sup>+</sup>[BH<sub>4</sub>]<sup>−</sup>",
+          oxStates: ["Unsymmetrical Cleavage", "→", "Diammoniate of Diborane"],
+          note: "Small Lewis bases (NH<sub>3</sub>, MeNH<sub>2</sub>) Diborane ka UNSYMMETRICAL cleavage karte hain aur ionic salt [BH<sub>2</sub>(NH<sub>3</sub>)<sub>2</sub>]<sup>+</sup>[BH<sub>4</sub>]<sup>−</sup> banate hain."
+        },
+        condB: {
+          title: "Heating at 473 K (2:1 Ratio)",
+          badge: "⭐ Inorganic Benzene",
+          badgeType: "emerald",
+          equation: "3B<sub>2</sub>H<sub>6</sub> + 6NH<sub>3</sub> —(473 K)→ 2B<sub>3</sub>N<sub>3</sub>H<sub>6</sub> (Borazine) + 12H<sub>2</sub>↑",
+          oxStates: ["Borazine (B<sub>3</sub>N<sub>3</sub>H<sub>6</sub>)", "→", "Isoelectronic with Benzene"],
+          note: "JEE Favorite! Borazine (B<sub>3</sub>N<sub>3</sub>H<sub>6</sub>) ko 'Inorganic Benzene' kehte hain, par ye Benzene se ZYADA reactive hai (polar B–N bonds hone ke karan HCl add kar leta hai)."
+        }
+      }
+    ];
+
+    // -------------------------------------------------------------------
+    // 3. TAB 2A DATABASE: OXIDES MATRIX
+    // -------------------------------------------------------------------
+    const OXIDES_DATA = [
+      // Amphoteric (JEE Favorites)
+      { sym: "Al<sub>2</sub>O<sub>3</sub>", name: "Aluminium Oxide", nature: "amphoteric", group: "Gr 13", rxn: "Al<sub>2</sub>O<sub>3</sub> + 6HCl → 2AlCl<sub>3</sub> + 3H<sub>2</sub>O  |  Al<sub>2</sub>O<sub>3</sub> + 2NaOH + 3H<sub>2</sub>O → 2Na[Al(OH)<sub>4</sub>]", tip: "Classic p-block amphoteric oxide! Acid aur base dono mein dissolve hota hai." },
+      { sym: "Ga<sub>2</sub>O<sub>3</sub>", name: "Gallium(III) Oxide", nature: "amphoteric", group: "Gr 13", rxn: "Reacts with both HCl (gives GaCl<sub>3</sub>) and NaOH (gives Na[Ga(OH)<sub>4</sub>]).", tip: "Gr 13 mein B<sub>2</sub>O<sub>3</sub> acidic, Al<sub>2</sub>O<sub>3</sub> & Ga<sub>2</sub>O<sub>3</sub> amphoteric, In<sub>2</sub>O<sub>3</sub> & Tl<sub>2</sub>O basic!" },
+      { sym: "SnO", name: "Tin(II) Oxide", nature: "amphoteric", group: "Gr 14", rxn: "SnO + 2HCl → SnCl<sub>2</sub> + H<sub>2</sub>O  |  SnO + 2NaOH → Na<sub>2</sub>SnO<sub>2</sub> + H<sub>2</sub>O", tip: "Group 14 mein Sn aur Pb ke DONO oxides (MO aur MO<sub>2</sub>) amphoteric hote hain!" },
+      { sym: "SnO<sub>2</sub>", name: "Tin(IV) Oxide", nature: "amphoteric", group: "Gr 14", rxn: "Dissolves in both strong acids and conc. NaOH (forms stannate Na<sub>2</sub>[Sn(OH)<sub>6</sub>]).", tip: "NCERT explicitly lists SnO<sub>2</sub> and PbO<sub>2</sub> as amphoteric oxides." },
+      { sym: "PbO", name: "Lead(II) Oxide (Litharge)", nature: "amphoteric", group: "Gr 14", rxn: "PbO + 2HNO<sub>3</sub> → Pb(NO<sub>3</sub>)<sub>2</sub> + H<sub>2</sub>O  |  PbO + 2NaOH → Na<sub>2</sub>PbO<sub>2</sub> + H<sub>2</sub>O", tip: "PbO aur PbO<sub>2</sub> dono amphoteric hain — JEE mein bahut baar count karne ko aata hai." },
+      { sym: "PbO<sub>2</sub>", name: "Lead(IV) Oxide", nature: "amphoteric", group: "Gr 14", rxn: "Amphoteric + Strong Oxidizing Agent (due to Inert Pair Effect, Pb<sup>4+</sup> → Pb<sup>2+</sup>).", tip: "Yaad rakho: PbO<sub>2</sub> amphoteric bhi hai aur strong oxidizing agent bhi!" },
+      { sym: "As<sub>2</sub>O<sub>3</sub>", name: "Arsenic(III) Oxide", nature: "amphoteric", group: "Gr 15", rxn: "Reacts with HCl to form AsCl<sub>3</sub> and with NaOH to form sodium arsenite (Na<sub>3</sub>AsO<sub>3</sub>).", tip: "Gr 15 trioxides: N<sub>2</sub>O<sub>3</sub> & P<sub>4</sub>O<sub>6</sub> acidic, As<sub>2</sub>O<sub>3</sub> & Sb<sub>2</sub>O<sub>3</sub> amphoteric, Bi<sub>2</sub>O<sub>3</sub> basic!" },
+      { sym: "Sb<sub>2</sub>O<sub>3</sub>", name: "Antimony(III) Oxide", nature: "amphoteric", group: "Gr 15", rxn: "Reacts with both acids (gives Sb<sup>3+</sup>) and bases (gives antimonite).", tip: "Metalloid oxide → Amphoteric nature." },
+
+      // Neutral Oxides (Only 3 in NCERT!)
+      { sym: "CO", name: "Carbon Monoxide", nature: "neutral", group: "Gr 14", rxn: "Does NOT react with water, acids, or bases at room temperature.", tip: "Neutral Oxide #1! Trick: 'CoNo N<sub>2</sub>O' (sirf yehi 3 neutral oxides hain!)." },
+      { sym: "NO", name: "Nitric Oxide", nature: "neutral", group: "Gr 15", rxn: "Neutral gas, paramagnetic (1 unpaired electron, odd-electron molecule).", tip: "Neutral Oxide #2! Brown ring test mein [Fe(H<sub>2</sub>O)<sub>5</sub>NO]<sup>2+</sup> banata hai." },
+      { sym: "N<sub>2</sub>O", name: "Nitrous Oxide", nature: "neutral", group: "Gr 15", rxn: "Neutral, diamagnetic gas (Laughing gas). Obtained by heating NH<sub>4</sub>NO<sub>3</sub>.", tip: "Neutral Oxide #3! Zn + dil. HNO<sub>3</sub> se banta hai." },
+
+      // Basic Oxides
+      { sym: "In<sub>2</sub>O<sub>3</sub>", name: "Indium(III) Oxide", nature: "basic", group: "Gr 13", rxn: "In<sub>2</sub>O<sub>3</sub> + 6HCl → 2InCl<sub>3</sub> + 3H<sub>2</sub>O (Does not dissolve in NaOH).", tip: "Down the group metallic character badhta hai → oxides basic ho jate hain." },
+      { sym: "Tl<sub>2</sub>O", name: "Thallium(I) Oxide", nature: "basic", group: "Gr 13", rxn: "Tl<sub>2</sub>O + H<sub>2</sub>O → 2TlOH (Strong alkali, comparable to KOH!).", tip: "Inert pair effect se Tl(+1) stable hai aur TlOH ek strong base hai." },
+      { sym: "Bi<sub>2</sub>O<sub>3</sub>", name: "Bismuth(III) Oxide", nature: "basic", group: "Gr 15", rxn: "Bi<sub>2</sub>O<sub>3</sub> + 6HNO<sub>3</sub> → 2Bi(NO<sub>3</sub>)<sub>3</sub> + 3H<sub>2</sub>O", tip: "Group 15 ka akela clearly BASIC oxide hai!" },
+
+      // Acidic Oxides
+      { sym: "B<sub>2</sub>O<sub>3</sub>", name: "Boron Trioxide", nature: "acidic", group: "Gr 13", rxn: "B<sub>2</sub>O<sub>3</sub> + 3H<sub>2</sub>O → 2H<sub>3</sub>BO<sub>3</sub> (Weak monobasic Lewis acid)", tip: "Group 13 ka akela acidic oxide hai." },
+      { sym: "SiO<sub>2</sub>", name: "Silicon Dioxide (Quartz)", nature: "acidic", group: "Gr 14", rxn: "SiO<sub>2</sub> + 2NaOH (fused) → Na<sub>2</sub>SiO<sub>3</sub> + H<sub>2</sub>O  |  SiO<sub>2</sub> + 4HF → SiF<sub>4</sub> + 2H<sub>2</sub>O", tip: "Giant 3D covalent network; sirf HF aur hot/fused NaOH se react karta hai." },
+      { sym: "N<sub>2</sub>O<sub>5</sub>", name: "Dinitrogen Pentoxide", nature: "acidic", group: "Gr 15", rxn: "N<sub>2</sub>O<sub>5</sub> + H<sub>2</sub>O → 2HNO<sub>3</sub> (Anhydride of Nitric acid)", tip: "Higher oxidation state (+5) = Stronger acidic oxide." },
+      { sym: "P<sub>4</sub>O<sub>10</sub>", name: "Phosphorus Pentoxide", nature: "acidic", group: "Gr 15", rxn: "P<sub>4</sub>O<sub>10</sub> + 6H<sub>2</sub>O → 4H<sub>3</sub>PO<sub>4</sub> (Powerful dehydrating agent)", tip: "HNO<sub>3</sub> se paani nikal kar N<sub>2</sub>O<sub>5</sub> bana deta hai!" },
+      { sym: "SO<sub>3</sub>", name: "Sulfur Trioxide", nature: "acidic", group: "Gr 16", rxn: "SO<sub>3</sub> + H<sub>2</sub>O → H<sub>2</sub>SO<sub>4</sub>", tip: "Strong acidic oxide; H<sub>2</sub>SO<sub>4</sub> mein dissolve hokar Oleum (H<sub>2</sub>S<sub>2</sub>O<sub>7</sub>) banata hai." },
+      { sym: "Cl<sub>2</sub>O<sub>7</sub>", name: "Dichlorine Heptoxide", nature: "acidic", group: "Gr 17", rxn: "Cl<sub>2</sub>O<sub>7</sub> + H<sub>2</sub>O → 2HClO<sub>4</sub> (Strongest mineral oxoacid!)", tip: "Poore periodic table ke sabse strongest acidic oxides mein se ek (+7 OS)." }
+    ];
+
+    // -------------------------------------------------------------------
+    // 4. TAB 2B DATABASE: OXOACIDS VAULT + INLINE SVG STRUCTURES
+    // -------------------------------------------------------------------
+    const OXOACIDS_DATA = {
+      P: {
+        familyOrder: "H<sub>3</sub>PO<sub>2</sub> > H<sub>3</sub>PO<sub>3</sub> > H<sub>3</sub>PO<sub>4</sub> (⚠️ JEE Exception! H<sub>3</sub>PO<sub>2</sub> is strongest in water!)",
+        acids: [
+          {
+            id: "h3po2",
+            formula: "H<sub>3</sub>PO<sub>2</sub>",
+            name: "Hypophosphorous Acid (Phosphinic)",
+            oxState: "+1",
+            basicity: "1 (Monobasic)",
+            special: "2 P–H bonds (Strongest Reducing Agent)",
+            bonds: "1 P=O, 1 P–OH, 2 P–H",
+            highlight: "⚠️ JEE TRAP: Isme 3 Hydrogen hain par basicity sirf 1 hai (kyunki sirf 1 –OH bond hai)! 2 P–H bonds hone ki wajah se ye AgNO<sub>3</sub> ko metallic Ag mein reduce kar deta hai!",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="130" y1="75" x2="130" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="138" y1="75" x2="138" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="108" x2="134" y2="148" stroke="#10b981" stroke-width="3"/>
+                <line x1="115" y1="95" x2="65" y2="115" stroke="#f59e0b" stroke-width="3"/>
+                <line x1="153" y1="95" x2="203" y2="115" stroke="#f59e0b" stroke-width="3"/>
+                <circle cx="134" cy="92" r="20" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/>
+                <text x="134" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">P</text>
+                <text x="134" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="134" y="168" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <text x="50" y="124" text-anchor="middle" fill="#fcd34d" font-family="JetBrains Mono" font-weight="700" font-size="15">H</text>
+                <text x="218" y="124" text-anchor="middle" fill="#fcd34d" font-family="JetBrains Mono" font-weight="700" font-size="15">H</text>
+                <text x="200" y="145" text-anchor="middle" fill="#f59e0b" font-family="Inter" font-size="10">Reducing P–H</text>
+              </svg>`
+          },
+          {
+            id: "h3po3",
+            formula: "H<sub>3</sub>PO<sub>3</sub>",
+            name: "Orthophosphorous Acid (Phosphonic)",
+            oxState: "+3",
+            basicity: "2 (Dibasic)",
+            special: "1 P–H bond (Reducing Agent)",
+            bonds: "1 P=O, 2 P–OH, 1 P–H",
+            highlight: "⚠️ JEE Favorite: 2 –OH groups hain → Dibasic acid (forms 2 series of salts: NaH<sub>2</sub>PO<sub>3</sub> & Na<sub>2</sub>HPO<sub>3</sub>). Heat karne par disproportionate hokar H<sub>3</sub>PO<sub>4</sub> + PH<sub>3</sub> deta hai!",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="130" y1="75" x2="130" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="138" y1="75" x2="138" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="108" x2="134" y2="148" stroke="#f59e0b" stroke-width="3"/>
+                <line x1="115" y1="95" x2="65" y2="115" stroke="#10b981" stroke-width="3"/>
+                <line x1="153" y1="95" x2="203" y2="115" stroke="#10b981" stroke-width="3"/>
+                <circle cx="134" cy="92" r="20" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/>
+                <text x="134" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">P</text>
+                <text x="134" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="134" y="168" text-anchor="middle" fill="#fcd34d" font-family="JetBrains Mono" font-weight="700" font-size="15">H</text>
+                <text x="48" y="124" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">HO</text>
+                <text x="220" y="124" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+              </svg>`
+          },
+          {
+            id: "h3po4",
+            formula: "H<sub>3</sub>PO<sub>4</sub>",
+            name: "Orthophosphoric Acid",
+            oxState: "+5",
+            basicity: "3 (Tribasic)",
+            special: "0 P–H bonds (Non-reducing)",
+            bonds: "1 P=O, 3 P–OH, 0 P–H",
+            highlight: "Teeno H atoms Oxygen se jude hain (3 P–OH) → Tribasic acid. Koi P–H bond nahi hone ki wajah se ye reducing agent nahi hota.",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="130" y1="75" x2="130" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="138" y1="75" x2="138" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="108" x2="134" y2="148" stroke="#10b981" stroke-width="3"/>
+                <line x1="115" y1="95" x2="65" y2="115" stroke="#10b981" stroke-width="3"/>
+                <line x1="153" y1="95" x2="203" y2="115" stroke="#10b981" stroke-width="3"/>
+                <circle cx="134" cy="92" r="20" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/>
+                <text x="134" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">P</text>
+                <text x="134" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="134" y="168" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <text x="48" y="124" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">HO</text>
+                <text x="220" y="124" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+              </svg>`
+          },
+          {
+            id: "h4p2o7",
+            formula: "H<sub>4</sub>P<sub>2</sub>O<sub>7</sub>",
+            name: "Pyrophosphoric Acid",
+            oxState: "+5",
+            basicity: "4 (Tetrabasic)",
+            special: "1 P–O–P Bridge Linkage",
+            bonds: "2 P=O, 4 P–OH, 1 P–O–P",
+            highlight: "2 H<sub>3</sub>PO<sub>4</sub> ko heat karke 1 H<sub>2</sub>O nikalne se banta hai. Isme 1 P–O–P bridge hota hai (NO P–P bond!).",
+            svg: `
+              <svg viewBox="0 0 320 185" class="w-full max-w-[320px] h-auto">
+                <line x1="88" y1="75" x2="88" y2="40" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="94" y1="75" x2="94" y2="40" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="226" y1="75" x2="226" y2="40" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="232" y1="75" x2="232" y2="40" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="110" y1="92" x2="146" y2="92" stroke="#38bdf8" stroke-width="3"/>
+                <line x1="174" y1="92" x2="210" y2="92" stroke="#38bdf8" stroke-width="3"/>
+                <line x1="72" y1="92" x2="36" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="91" y1="110" x2="91" y2="148" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="248" y1="92" x2="284" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="229" y1="110" x2="229" y2="148" stroke="#10b981" stroke-width="2.5"/>
+                <circle cx="91" cy="92" r="18" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/>
+                <circle cx="229" cy="92" r="18" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/>
+                <circle cx="160" cy="92" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+                <text x="91" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">P</text>
+                <text x="229" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">P</text>
+                <text x="160" y="97" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="91" y="30" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="229" y="30" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="20" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">HO</text>
+                <text x="91" y="166" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">OH</text>
+                <text x="300" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">OH</text>
+                <text x="229" y="166" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">OH</text>
+              </svg>`
+          }
+        ]
+      },
+      S: {
+        familyOrder: "H<sub>2</sub>SO<sub>4</sub> > H<sub>2</sub>SO<sub>3</sub> (Higher oxidation state of S = Stronger acid)",
+        acids: [
+          {
+            id: "h2so3",
+            formula: "H<sub>2</sub>SO<sub>3</sub>",
+            name: "Sulphurous Acid",
+            oxState: "+4",
+            basicity: "2 (Dibasic)",
+            special: "1 Lone Pair on S (Pyramidal)",
+            bonds: "1 S=O, 2 S–OH, 1 Lone Pair",
+            highlight: "S(+4) intermediate state mein hai → Oxidizing aur Reducing DONO agent ki tarah kaam kar sakta hai.",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="126" y1="75" x2="126" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="75" x2="134" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="112" y1="100" x2="64" y2="132" stroke="#10b981" stroke-width="3"/>
+                <line x1="148" y1="100" x2="196" y2="132" stroke="#10b981" stroke-width="3"/>
+                <circle cx="130" cy="92" r="20" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <text x="130" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">S</text>
+                <text x="130" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="48" y="146" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">HO</text>
+                <text x="212" y="146" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <circle cx="124" cy="126" r="3" fill="#a78bfa"/>
+                <circle cx="136" cy="126" r="3" fill="#a78bfa"/>
+                <text x="130" y="144" text-anchor="middle" fill="#c4b5fd" font-family="Inter" font-size="10">Lone Pair</text>
+              </svg>`
+          },
+          {
+            id: "h2so4",
+            formula: "H<sub>2</sub>SO<sub>4</sub>",
+            name: "Sulphuric Acid (King of Chemicals)",
+            oxState: "+6",
+            basicity: "2 (Dibasic)",
+            special: "Tetrahedral (sp³), Strong Dehydrating Agent",
+            bonds: "2 S=O, 2 S–OH",
+            highlight: "2 S=O aur 2 S–OH bonds. Contact Process (V<sub>2</sub>O<sub>5</sub> catalyst) se banaya jata hai.",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="126" y1="74" x2="126" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="74" x2="134" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="126" y1="112" x2="126" y2="148" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="112" x2="134" y2="148" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="110" y1="92" x2="62" y2="92" stroke="#10b981" stroke-width="3"/>
+                <line x1="150" y1="92" x2="198" y2="92" stroke="#10b981" stroke-width="3"/>
+                <circle cx="130" cy="92" r="20" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <text x="130" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">S</text>
+                <text x="130" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="130" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="44" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">HO</text>
+                <text x="216" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+              </svg>`
+          },
+          {
+            id: "h2s2o7",
+            formula: "H<sub>2</sub>S<sub>2</sub>O<sub>7</sub>",
+            name: "Oleum (Pyrosulphuric Acid)",
+            oxState: "+6",
+            basicity: "2 (Dibasic)",
+            special: "1 S–O–S Bridge (NO Peroxy Bond)",
+            bonds: "4 S=O, 2 S–OH, 1 S–O–S",
+            highlight: "H<sub>2</sub>SO<sub>4</sub> + SO<sub>3</sub> = H<sub>2</sub>S<sub>2</sub>O<sub>7</sub> (Oleum). Isme S–O–S bridge hota hai, koi S–S ya O–O bond nahi!",
+            svg: `
+              <svg viewBox="0 0 320 190" class="w-full max-w-[320px] h-auto">
+                <line x1="88" y1="74" x2="88" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="94" y1="74" x2="94" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="88" y1="112" x2="88" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="94" y1="112" x2="94" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="226" y1="74" x2="226" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="232" y1="74" x2="232" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="226" y1="112" x2="226" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="232" y1="112" x2="232" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="110" y1="92" x2="146" y2="92" stroke="#38bdf8" stroke-width="3"/>
+                <line x1="174" y1="92" x2="210" y2="92" stroke="#38bdf8" stroke-width="3"/>
+                <line x1="72" y1="92" x2="36" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="248" y1="92" x2="284" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <circle cx="91" cy="92" r="18" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="229" cy="92" r="18" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="160" cy="92" r="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+                <text x="91" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">S</text>
+                <text x="229" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">S</text>
+                <text x="160" y="97" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="91" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="91" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="229" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="229" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="14">O</text>
+                <text x="20" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">HO</text>
+                <text x="300" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="13">OH</text>
+              </svg>`
+          },
+          {
+            id: "h2so5",
+            formula: "H<sub>2</sub>SO<sub>5</sub>",
+            name: "Caro's Acid (Peroxomonosulphuric Acid)",
+            oxState: "+6 (NOT +8!)",
+            basicity: "2 (Dibasic)",
+            special: "1 Peroxy (–O–O–) Linkage",
+            bonds: "2 S=O, 1 S–OH, 1 S–O–O–H",
+            highlight: "⚠️ JEE TRAP: Formula se S ka OS +8 aata hai jo impossible hai (max +6)! Kyunki isme 1 Peroxy (–O–O–) linkage hai jisme dono O (−1) state mein hote hain → True OS = +6!",
+            svg: `
+              <svg viewBox="0 0 300 190" class="w-full max-w-[300px] h-auto">
+                <line x1="106" y1="74" x2="106" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="114" y1="74" x2="114" y2="38" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="106" y1="112" x2="106" y2="148" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="114" y1="112" x2="114" y2="148" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="90" y1="92" x2="46" y2="92" stroke="#10b981" stroke-width="3"/>
+                <line x1="130" y1="92" x2="164" y2="92" stroke="#f59e0b" stroke-width="3"/>
+                <line x1="192" y1="92" x2="218" y2="92" stroke="#f43f5e" stroke-width="3.5" stroke-dasharray="4 2"/>
+                <line x1="246" y1="92" x2="268" y2="92" stroke="#10b981" stroke-width="3"/>
+                <circle cx="110" cy="92" r="20" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="178" cy="92" r="14" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+                <circle cx="232" cy="92" r="14" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+                <text x="110" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="16">S</text>
+                <text x="178" y="97" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="232" y="97" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="280" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">H</text>
+                <text x="110" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="110" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="28" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">HO</text>
+                <text x="205" y="125" text-anchor="middle" fill="#fb7185" font-family="Inter" font-weight="700" font-size="10">Peroxy (–O–O–)</text>
+              </svg>`
+          },
+          {
+            id: "h2s2o8",
+            formula: "H<sub>2</sub>S<sub>2</sub>O<sub>8</sub>",
+            name: "Marshall's Acid (Peroxodisulphuric Acid)",
+            oxState: "+6 (NOT +7!)",
+            basicity: "2 (Dibasic)",
+            special: "1 Central S–O–O–S Peroxy Bridge",
+            bonds: "4 S=O, 2 S–OH, 1 O–O Bridge",
+            highlight: "⚠️ JEE Most Asked! Calculated OS (+7) > Max (+6) → matlab 1 central peroxy linkage (–O–O–) present hai! Hydrolysis par H<sub>2</sub>O<sub>2</sub> deta hai.",
+            svg: `
+              <svg viewBox="0 0 340 190" class="w-full max-w-[340px] h-auto">
+                <line x1="82" y1="74" x2="82" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="88" y1="74" x2="88" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="82" y1="112" x2="82" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="88" y1="112" x2="88" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="252" y1="74" x2="252" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="258" y1="74" x2="258" y2="38" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="252" y1="112" x2="252" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="258" y1="112" x2="258" y2="148" stroke="#f43f5e" stroke-width="2.5"/>
+                <line x1="66" y1="92" x2="32" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="274" y1="92" x2="308" y2="92" stroke="#10b981" stroke-width="2.5"/>
+                <line x1="104" y1="92" x2="132" y2="92" stroke="#f59e0b" stroke-width="2.5"/>
+                <line x1="158" y1="92" x2="182" y2="92" stroke="#f43f5e" stroke-width="3.5" stroke-dasharray="4 2"/>
+                <line x1="208" y1="92" x2="236" y2="92" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="85" cy="92" r="18" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="255" cy="92" r="18" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                <circle cx="145" cy="92" r="13" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+                <circle cx="195" cy="92" r="13" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+                <text x="85" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">S</text>
+                <text x="255" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="14">S</text>
+                <text x="145" y="97" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="12">O</text>
+                <text x="195" y="97" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="12">O</text>
+                <text x="85" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="85" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="255" y="28" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="255" y="168" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="13">O</text>
+                <text x="17" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="12">HO</text>
+                <text x="323" y="97" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="12">OH</text>
+                <text x="170" y="124" text-anchor="middle" fill="#fb7185" font-family="Inter" font-weight="700" font-size="10">Peroxy Bridge</text>
+              </svg>`
+          }
+        ]
+      },
+      Cl: {
+        familyOrder: "HOCl < HClO<sub>2</sub> < HClO<sub>3</sub> < HClO<sub>4</sub> (Acidic Strength & Thermal Stability ↑ | Oxidizing Power ↓)",
+        acids: [
+          {
+            id: "hocl",
+            formula: "HOCl",
+            name: "Hypochlorous Acid",
+            oxState: "+1",
+            basicity: "1 (Monobasic)",
+            special: "Strongest Oxidizing Agent in Cl oxoacids",
+            bonds: "0 Cl=O, 1 Cl–OH, 3 Lone Pairs",
+            highlight: "Weakest acid par STRONGEST oxidizing agent! Cold NaOH + Cl<sub>2</sub> se iska salt (NaOCl) banta hai.",
+            svg: `
+              <svg viewBox="0 0 240 160" class="w-full max-w-[240px] h-auto">
+                <line x1="120" y1="80" x2="178" y2="80" stroke="#10b981" stroke-width="3"/>
+                <circle cx="100" cy="80" r="22" fill="#0f172a" stroke="#a78bfa" stroke-width="2.5"/>
+                <text x="100" y="85" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="15">Cl</text>
+                <text x="196" y="85" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <text x="100" y="45" text-anchor="middle" fill="#c4b5fd" font-family="Inter" font-size="11">3 Lone Pairs</text>
+              </svg>`
+          },
+          {
+            id: "hclo2",
+            formula: "HClO<sub>2</sub>",
+            name: "Chlorous Acid",
+            oxState: "+3",
+            basicity: "1 (Monobasic)",
+            special: "Bent / Angular (2 Lone Pairs)",
+            bonds: "1 Cl=O, 1 Cl–OH, 2 Lone Pairs",
+            highlight: "ClO<sub>2</sub><sup>−</sup> conjugate base mein 2 resonating structures hote hain.",
+            svg: `
+              <svg viewBox="0 0 240 175" class="w-full max-w-[240px] h-auto">
+                <line x1="116" y1="68" x2="116" y2="34" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="124" y1="68" x2="124" y2="34" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="138" y1="98" x2="184" y2="122" stroke="#10b981" stroke-width="3"/>
+                <circle cx="120" cy="88" r="21" fill="#0f172a" stroke="#a78bfa" stroke-width="2.5"/>
+                <text x="120" y="93" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="15">Cl</text>
+                <text x="120" y="25" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="200" y="132" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <text x="64" y="128" text-anchor="middle" fill="#c4b5fd" font-family="Inter" font-size="10">2 Lone Pairs</text>
+              </svg>`
+          },
+          {
+            id: "hclo3",
+            formula: "HClO<sub>3</sub>",
+            name: "Chloric Acid",
+            oxState: "+5",
+            basicity: "1 (Monobasic)",
+            special: "Pyramidal (1 Lone Pair)",
+            bonds: "2 Cl=O, 1 Cl–OH, 1 Lone Pair",
+            highlight: "Hot conc. NaOH + Cl<sub>2</sub> se iska salt (NaClO<sub>3</sub>) banta hai. Cl–O bond order in ClO<sub>3</sub><sup>−</sup> = 1.67.",
+            svg: `
+              <svg viewBox="0 0 260 185" class="w-full max-w-[260px] h-auto">
+                <line x1="126" y1="72" x2="126" y2="36" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="72" x2="134" y2="36" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="112" y1="100" x2="66" y2="128" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="116" y1="106" x2="70" y2="134" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="148" y1="102" x2="196" y2="130" stroke="#10b981" stroke-width="3"/>
+                <circle cx="130" cy="92" r="21" fill="#0f172a" stroke="#a78bfa" stroke-width="2.5"/>
+                <text x="130" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="15">Cl</text>
+                <text x="130" y="26" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="54" y="145" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="212" y="145" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+                <text x="130" y="142" text-anchor="middle" fill="#c4b5fd" font-family="Inter" font-size="10">1 Lone Pair</text>
+              </svg>`
+          },
+          {
+            id: "hclo4",
+            formula: "HClO<sub>4</sub>",
+            name: "Perchloric Acid",
+            oxState: "+7",
+            basicity: "1 (Monobasic)",
+            special: "Strongest Acid & Most Thermally Stable",
+            bonds: "3 Cl=O, 1 Cl–OH, 0 Lone Pairs",
+            highlight: "Tetrahedral (sp³)! ClO<sub>4</sub><sup>−</sup> mein 4 equivalent resonating structures hote hain → extreme stability → strongest oxoacid!",
+            svg: `
+              <svg viewBox="0 0 260 190" class="w-full max-w-[260px] h-auto">
+                <line x1="126" y1="72" x2="126" y2="36" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="134" y1="72" x2="134" y2="36" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="112" y1="100" x2="66" y2="126" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="116" y1="106" x2="70" y2="132" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="148" y1="100" x2="194" y2="126" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="144" y1="106" x2="190" y2="132" stroke="#f43f5e" stroke-width="3"/>
+                <line x1="130" y1="112" x2="130" y2="152" stroke="#10b981" stroke-width="3"/>
+                <circle cx="130" cy="92" r="21" fill="#0f172a" stroke="#a78bfa" stroke-width="2.5"/>
+                <text x="130" y="97" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="700" font-size="15">Cl</text>
+                <text x="130" y="26" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="54" y="142" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="206" y="142" text-anchor="middle" fill="#fda4af" font-family="JetBrains Mono" font-weight="700" font-size="15">O</text>
+                <text x="130" y="172" text-anchor="middle" fill="#6ee7b7" font-family="JetBrains Mono" font-weight="700" font-size="15">OH</text>
+              </svg>`
+          }
+        ]
+      }
+    };
+
+    // -------------------------------------------------------------------
+    // 5. TAB 3 DATABASE: HINGLISH CHEAT-CODES & JEE TRICKS
+    // -------------------------------------------------------------------
+    const TRICKS_DATA = [
+      {
+        badge: "Oxides #1",
+        accent: "amber",
+        title: "All Amphoteric Oxides Trick (JEE Direct +4)",
+        trick: "\"Sab Jana Be-kar Gaana Sunao Prabhu Aasman Mein (Al)\"",
+        formula: "Sb<sub>2</sub>O<sub>3</sub>, ZnO, BeO, Cr<sub>2</sub>O<sub>3</sub>, Ga<sub>2</sub>O<sub>3</sub>, SnO/SnO<sub>2</sub>, PbO/PbO<sub>2</sub>, As<sub>2</sub>O<sub>3</sub>, Al<sub>2</sub>O<sub>3</sub>",
+        detail: "p-Block ke 8 amphoteric oxides pakke yaad rakho: Al<sub>2</sub>O<sub>3</sub>, Ga<sub>2</sub>O<sub>3</sub>, SnO, SnO<sub>2</sub>, PbO, PbO<sub>2</sub>, As<sub>2</sub>O<sub>3</sub>, Sb<sub>2</sub>O<sub>3</sub> (aur d/s-block mein ZnO, BeO, Cr<sub>2</sub>O<sub>3</sub>, V<sub>2</sub>O<sub>5</sub>)."
+      },
+      {
+        badge: "Oxides #2",
+        accent: "violet",
+        title: "Neutral Oxides Trick (Bas 3 Hi Hain!)",
+        trick: "\"CoNo N<sub>2</sub>O\" (Kono Nahi!)",
+        formula: "CO, NO, N<sub>2</sub>O",
+        detail: "Poore NCERT p-Block mein sirf YEHI 3 neutral oxides hain. Baaki koi bhi non-metal oxide (jaise NO<sub>2</sub>, SO<sub>2</sub>, CO<sub>2</sub>) aaye toh wo ACIDIC hoga!"
+      },
+      {
+        badge: "Hydrolysis Trap",
+        accent: "rose",
+        title: "NCl<sub>3</sub> vs PCl<sub>3</sub> Hydrolysis Trick",
+        trick: "\"Jis par δ− usko H<sup>+</sup> do, jis par δ+ usko OH<sup>−</sup> do!\"",
+        formula: "NCl<sub>3</sub> → NH<sub>3</sub> + 3HOCl  |  PCl<sub>3</sub> → H<sub>3</sub>PO<sub>3</sub> + 3HCl",
+        detail: "NCl<sub>3</sub> mein Nitrogen Cl se zyada electronegative hai (N<sup>δ−</sup>–Cl<sup>δ+</sup>) isliye N ko H milta hai (NH<sub>3</sub>). PCl<sub>3</sub> mein Cl zyada electronegative hai (P<sup>δ+</sup>–Cl<sup>δ−</sup>) isliye Cl ko H milta hai (HCl)!"
+      },
+      {
+        badge: "Group 13",
+        accent: "cyan",
+        title: "Lewis Acidic Strength of Boron Halides",
+        trick: "\"Back-bonding jitni STRONG, Lewis acidity utni WEAK!\"",
+        formula: "BF<sub>3</sub> < BCl<sub>3</sub> < BBr<sub>3</sub> < BI<sub>3</sub>",
+        detail: "Expected order BF<sub>3</sub> > BI<sub>3</sub> tha (electronegativity se), par B(2p)–F(2p) overlap sabse best hota hai (strong pπ–pπ back bonding). Isse Boron ki electron bhookh mit jati hai → BF<sub>3</sub> weakest Lewis acid!"
+      },
+      {
+        badge: "Nitric Acid",
+        accent: "emerald",
+        title: "HNO<sub>3</sub> with Cu & Zn Shortcut",
+        trick: "\"Conc. hamesha NO<sub>2</sub> | Dilute mein Cu→NO, Zn→N<sub>2</sub>O\"",
+        formula: "Conc. HNO<sub>3</sub> + Cu/Zn → NO<sub>2</sub>  |  Dil. + Cu → NO  |  Dil. + Zn → N<sub>2</sub>O",
+        detail: "Yaad rakhne ka mast tareeqa: Zn zyada reactive hai toh N(+5) ko aur neeche (+1, N<sub>2</sub>O) tak gira deta hai, jabki Cu sirf (+2, NO) tak le ja pata hai!"
+      },
+      {
+        badge: "Noble Gases",
+        accent: "cyan",
+        title: "XeF<sub>2</sub>, XeF<sub>4</sub>, XeF<sub>6</sub> Hydrolysis Shortcut",
+        trick: "\"2 dega Xe+O<sub>2</sub> | 4 todega Xe+XeO<sub>3</sub>+O<sub>2</sub> | 6 sirf XeO<sub>3</sub> (No O<sub>2</sub>!)\"",
+        formula: "XeF<sub>2</sub> → Xe+O<sub>2</sub>  |  XeF<sub>4</sub> → Xe+XeO<sub>3</sub>+O<sub>2</sub>  |  XeF<sub>6</sub> → XeO<sub>3</sub> (Non-redox)",
+        detail: "Sirf XeF<sub>4</sub> disproportionate hota hai (+4 → 0 & +6). Sirf XeF<sub>6</sub> non-redox hai (isme O<sub>2</sub> gas bilkul nahi nikalti!)."
+      },
+      {
+        badge: "Oxoacids",
+        accent: "amber",
+        title: "Oxoacids Basicity & Peroxy Linkage Hack",
+        trick: "\"P ke acids mein 1 P=O fix hai; S ka OS > +6 dikhe toh Peroxy (–O–O–) pakka!\"",
+        formula: "H<sub>3</sub>PO<sub>2</sub> (1 OH) | H<sub>3</sub>PO<sub>3</sub> (2 OH) | Caro's (H<sub>2</sub>SO<sub>5</sub>) & Marshall's (H<sub>2</sub>S<sub>2</sub>O<sub>8</sub>) = +6 OS",
+        detail: "Phosphorus oxoacids mein jitne O hain usme se 1 P=O banao, bache hue O se –OH banao (yehi basicity hai), aur bache H ko P–H (reducing bond) bana do! Sulfur mein agar calculated OS +6 se zyada aaye (jaise +8 ya +7), samajh jao 1 peroxy bond hai aur real OS +6 hi hai."
+      }
+    ];
+
+    // -------------------------------------------------------------------
+    // 6. TAB 4 DATABASE: 12 HIGH-YIELD JEE PYQ MCQs
+    // -------------------------------------------------------------------
+    const QUIZ_QUESTIONS = [
+      {
+        topic: "Hydrolysis Trap",
+        q: "Complete hydrolysis of NCl<sub>3</sub> with water yields:",
+        options: ["HNO<sub>2</sub> + HCl", "NH<sub>3</sub> + HOCl", "HNO<sub>3</sub> + HCl", "NH<sub>4</sub>Cl + O<sub>2</sub>"],
+        ans: 1,
+        exp: "NCl<sub>3</sub> mein N<sup>δ−</sup>–Cl<sup>δ+</sup> polarity aur Cl ke vacant 3d-orbital ke karan H<sub>2</sub>O Cl par attack karta hai → NH<sub>3</sub> + 3HOCl!"
+      },
+      {
+        topic: "Group 18 Hydrolysis",
+        q: "Which xenon fluoride undergoes DISPROPORTIONATION on complete hydrolysis with water?",
+        options: ["XeF<sub>2</sub>", "XeF<sub>4</sub>", "XeF<sub>6</sub>", "Both XeF<sub>2</sub> and XeF<sub>6</sub>"],
+        ans: 1,
+        exp: "6XeF<sub>4</sub> + 12H<sub>2</sub>O → 4Xe(0) + 2XeO<sub>3</sub>(+6) + 24HF + 3O<sub>2</sub>. Xe(+4) simultaneously 0 aur +6 mein disproportionate hota hai!"
+      },
+      {
+        topic: "Group 16 Halide Trap",
+        q: "SF<sub>6</sub> is inert towards hydrolysis at room temperature primarily because:",
+        options: [
+          "Sulfur has no vacant d-orbitals",
+          "S–F bond is weaker than S–O bond",
+          "Sulfur is sterically shielded by six Fluorine atoms",
+          "Hydrolysis of SF<sub>6</sub> is thermodynamically impossible"
+        ],
+        ans: 2,
+        exp: "S ke paas 3d-orbitals hain, par 6 F atoms ka octahedral cage (steric hindrance) paani ke molecules ko Sulfur tak pahunchne hi nahi deta!"
+      },
+      {
+        topic: "Group 13 Partial Hydrolysis",
+        q: "Reaction of BF<sub>3</sub> with water gives H<sub>3</sub>BO<sub>3</sub> along with:",
+        options: ["HF only", "H[BF<sub>4</sub>]", "B<sub>2</sub>H<sub>6</sub>", "No reaction occurs"],
+        ans: 1,
+        exp: "BF<sub>3</sub> partial hydrolysis dikhata hai: 4BF<sub>3</sub> + 3H<sub>2</sub>O → H<sub>3</sub>BO<sub>3</sub> + 3H<sup>+</sup>[BF<sub>4</sub>]<sup>−</sup>."
+      },
+      {
+        topic: "Amphoteric Oxides",
+        q: "Which of the following sets contains ONLY amphoteric oxides?",
+        options: [
+          "Al<sub>2</sub>O<sub>3</sub>, PbO<sub>2</sub>, Sb<sub>2</sub>O<sub>3</sub>",
+          "B<sub>2</sub>O<sub>3</sub>, Al<sub>2</sub>O<sub>3</sub>, Ga<sub>2</sub>O<sub>3</sub>",
+          "CO, NO, N<sub>2</sub>O",
+          "SnO<sub>2</sub>, Bi<sub>2</sub>O<sub>3</sub>, As<sub>2</sub>O<sub>3</sub>"
+        ],
+        ans: 0,
+        exp: "Al<sub>2</sub>O<sub>3</sub>, PbO<sub>2</sub> aur Sb<sub>2</sub>O<sub>3</sub> teeno amphoteric hain. (B<sub>2</sub>O<sub>3</sub> acidic hai, CO/NO/N<sub>2</sub>O neutral hain, aur Bi<sub>2</sub>O<sub>3</sub> basic hai)."
+      },
+      {
+        topic: "Halogen + Alkali Trap",
+        q: "Reaction of F<sub>2</sub> with cold and dilute NaOH gives:",
+        options: ["NaF + NaOF + H<sub>2</sub>O", "NaF + OF<sub>2</sub> + H<sub>2</sub>O", "NaF + O<sub>2</sub> + H<sub>2</sub>O", "NaF + NaFO<sub>3</sub> + H<sub>2</sub>O"],
+        ans: 1,
+        exp: "Fluorine disproportionate nahi karta! Cold dil. NaOH mein 2F<sub>2</sub> + 2NaOH → 2NaF + OF<sub>2</sub> + H<sub>2</sub>O (aur hot conc. mein O<sub>2</sub> deta hai)."
+      },
+      {
+        topic: "Cl2 + Hot Conc. NaOH",
+        q: "When Cl<sub>2</sub> gas is passed through HOT and CONCENTRATED NaOH, the products formed are:",
+        options: ["NaCl + NaOCl", "NaCl + NaClO<sub>2</sub>", "NaCl + NaClO<sub>3</sub>", "NaCl + NaClO<sub>4</sub>"],
+        ans: 2,
+        exp: "3Cl<sub>2</sub> + 6NaOH (hot, conc.) → 5NaCl + NaClO<sub>3</sub> + 3H<sub>2</sub>O. Hot condition mein +5 (chlorate) banta hai!"
+      },
+      {
+        topic: "Metals + Dilute HNO3",
+        q: "Gases evolved when Cu and Zn react separately with DILUTE HNO<sub>3</sub> are respectively:",
+        options: ["NO<sub>2</sub> and NO", "NO and N<sub>2</sub>O", "N<sub>2</sub>O and NO", "NO<sub>2</sub> and N<sub>2</sub>O"],
+        ans: 1,
+        exp: "Trick: Dilute HNO<sub>3</sub> ke sath Cu deta hai NO (+2) aur zyada reactive Zn deta hai N<sub>2</sub>O (+1, laughing gas)!"
+      },
+      {
+        topic: "Phosphorus Oxoacids",
+        q: "The basicity and number of P–H bonds in hypophosphorous acid (H<sub>3</sub>PO<sub>2</sub>) are respectively:",
+        options: ["3 and 0", "2 and 1", "1 and 2", "1 and 1"],
+        ans: 2,
+        exp: "H<sub>3</sub>PO<sub>2</sub> mein 1 P=O, 1 P–OH (basicity = 1) aur 2 P–H reducing bonds hote hain!"
+      },
+      {
+        topic: "Sulfur Oxoacids",
+        q: "The true oxidation state of Sulfur and number of peroxy (–O–O–) linkages in Marshall's acid (H<sub>2</sub>S<sub>2</sub>O<sub>8</sub>) are:",
+        options: ["+7 and 0", "+6 and 1", "+6 and 2", "+5 and 1"],
+        ans: 1,
+        exp: "Marshall's acid (H<sub>2</sub>S<sub>2</sub>O<sub>8</sub>) mein 1 central S–O–O–S peroxy bridge hota hai aur dono Sulfur +6 state mein hote hain!"
+      },
+      {
+        topic: "Diborane Chemistry",
+        q: "Heating Diborane (B<sub>2</sub>H<sub>6</sub>) with Ammonia (NH<sub>3</sub>) in 1:2 ratio at 473 K produces:",
+        options: ["Boron nitride (BN)", "Borazine (B<sub>3</sub>N<sub>3</sub>H<sub>6</sub>)", "Boric acid (H<sub>3</sub>BO<sub>3</sub>)", "Sodium borohydride (NaBH<sub>4</sub>)"],
+        ans: 1,
+        exp: "3B<sub>2</sub>H<sub>6</sub> + 6NH<sub>3</sub> —(473 K)→ 2B<sub>3</sub>N<sub>3</sub>H<sub>6</sub> (Borazine / Inorganic Benzene) + 12H<sub>2</sub>!"
+      },
+      {
+        topic: "Boron Halides Acidity",
+        q: "The correct order of Lewis acidic strength of Boron trihalides is:",
+        options: [
+          "BF<sub>3</sub> > BCl<sub>3</sub> > BBr<sub>3</sub> > BI<sub>3</sub>",
+          "BI<sub>3</sub> > BBr<sub>3</sub> > BCl<sub>3</sub> > BF<sub>3</sub>",
+          "BCl<sub>3</sub> > BF<sub>3</sub> > BBr<sub>3</sub> > BI<sub>3</sub>",
+          "BBr<sub>3</sub> > BI<sub>3</sub> > BCl<sub>3</sub> > BF<sub>3</sub>"
+        ],
+        ans: 1,
+        exp: "BF<sub>3</sub> mein strongest 2pπ–2pπ back bonding hone ki wajah se ye weakest Lewis acid hai → Order: BI<sub>3</sub> > BBr<sub>3</sub> > BCl<sub>3</sub> > BF<sub>3</sub>!"
+      }
+    ];
+
+    // -------------------------------------------------------------------
+    // 7. STATE & INITIALIZATION
+    // -------------------------------------------------------------------
+    const state = {
+      activeTab: "lab",
+      labCat: "halides",
+      selectedHalideId: "bf3",
+      selectedAlkaliId: "cl2_naoh",
+      alkaliCond: "A", // "A" = cold/dil, "B" = hot/conc
+      oxideFilter: "all",
+      selectedOxideIdx: 0,
+      oxoFamily: "P",
+      selectedOxoAcidId: "h3po2",
+      quizIdx: 0,
+      quizScore: 0,
+      quizStreak: 0,
+      quizAnswered: false
+    };
+
+    // -------------------------------------------------------------------
+    // 8. MAIN TAB NAVIGATION
+    // -------------------------------------------------------------------
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.tab;
+        state.activeTab = target;
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+        document.getElementById(`tab-${target}`).classList.remove("hidden");
+
+        document.querySelectorAll(".tab-btn").forEach(b => {
+          if (b.dataset.tab === target) {
+            b.className = "tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10";
+          } else {
+            b.className = "tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/70 border border-transparent";
+          }
+        });
+      });
+    });
+
+    // -------------------------------------------------------------------
+    // 9. TAB 1: HYDROLYSIS & REACTION LAB LOGIC
+    // -------------------------------------------------------------------
+    document.getElementById("catHalidesBtn").addEventListener("click", () => {
+      state.labCat = "halides";
+      document.getElementById("sublab-halides").classList.remove("hidden");
+      document.getElementById("sublab-alkali").classList.add("hidden");
+      document.getElementById("catHalidesBtn").className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm";
+      document.getElementById("catAlkaliBtn").className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-slate-800/70 text-slate-400 border border-slate-700 hover:text-white";
+    });
+
+    document.getElementById("catAlkaliBtn").addEventListener("click", () => {
+      state.labCat = "alkali";
+      document.getElementById("sublab-halides").classList.add("hidden");
+      document.getElementById("sublab-alkali").classList.remove("hidden");
+      document.getElementById("catAlkaliBtn").className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-sm";
+      document.getElementById("catHalidesBtn").className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-slate-800/70 text-slate-400 border border-slate-700 hover:text-white";
+    });
+
+    function renderHalideButtons() {
+      const grid = document.getElementById("halideButtonsGrid");
+      grid.innerHTML = HALIDE_REACTIONS.map(r => {
+        const isSel = r.id === state.selectedHalideId;
+        return `
+          <button data-hid="${r.id}" class="halide-btn relative px-3 py-2.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition border text-center ${
+            isSel
+              ? "bg-cyan-500/25 text-white border-cyan-400 shadow-md shadow-cyan-500/20 scale-[1.02]"
+              : "bg-slate-900/80 text-slate-300 border-slate-700/80 hover:border-cyan-500/50 hover:text-white"
+          }">
+            ${r.label}
+            ${r.trap ? `<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 trap-pulse" title="JEE Trap"></span>` : ""}
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".halide-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selectedHalideId = btn.dataset.hid;
+          renderHalideButtons();
+          renderHalideChamber();
+        });
+      });
+    }
+
+    function renderHalideChamber() {
+      const r = HALIDE_REACTIONS.find(x => x.id === state.selectedHalideId) || HALIDE_REACTIONS[0];
+      document.getElementById("halideGroupTag").textContent = r.group;
+      document.getElementById("halideTitle").innerHTML = r.title;
+      document.getElementById("halideEquation").innerHTML = r.equation;
+      document.getElementById("halideMechanism").innerHTML = r.mechanism;
+      document.getElementById("halideTrick").innerHTML = r.trick;
+      document.getElementById("beakerCaption").innerHTML = r.caption;
+
+      // Trap Badge
+      const trapDiv = document.getElementById("halideTrapBadge");
+      if (r.trap) {
+        trapDiv.innerHTML = `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/50 trap-pulse">⚠️ JEE TRAP</span>`;
+      } else {
+        trapDiv.innerHTML = `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">✅ NCERT Standard</span>`;
+      }
+
+      // Product Pills
+      document.getElementById("halideProductPills").innerHTML = r.products.map(p => `
+        <span class="px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-semibold text-cyan-200">${p}</span>
+      `).join("");
+
+      // Beaker Liquid & Bubbles Animation
+      const liquid = document.getElementById("beakerLiquid");
+      liquid.className = `absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t ${r.liquidClass} liquid-glow transition-all duration-500`;
+
+      const bubbles = document.getElementById("beakerBubbles");
+      const icon = document.getElementById("beakerStatusIcon");
+      if (r.status === "none") {
+        bubbles.classList.add("hidden");
+        icon.textContent = "🛡️";
+      } else {
+        bubbles.classList.remove("hidden");
+        icon.textContent = "";
+      }
+    }
+
+    function renderAlkaliList() {
+      const list = document.getElementById("alkaliList");
+      list.innerHTML = ALKALI_REACTIONS.map(r => {
+        const isSel = r.id === state.selectedAlkaliId;
+        return `
+          <button data-aid="${r.id}" class="alkali-btn w-full px-4 py-3 rounded-xl text-left transition border flex items-center justify-between ${
+            isSel
+              ? "bg-amber-500/20 text-white border-amber-400 shadow-md shadow-amber-500/10"
+              : "bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-600 hover:text-white"
+          }">
+            <div>
+              <div class="font-mono font-bold text-sm">${r.label}</div>
+              <div class="text-[11px] text-slate-400">${r.category}</div>
+            </div>
+            ${r.trap ? `<span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/40">TRAP</span>` : ""}
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".alkali-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selectedAlkaliId = btn.dataset.aid;
+          state.alkaliCond = "A";
+          renderAlkaliList();
+          renderAlkaliChamber();
+        });
+      });
+    }
+
+    function renderAlkaliChamber() {
+      const r = ALKALI_REACTIONS.find(x => x.id === state.selectedAlkaliId) || ALKALI_REACTIONS[0];
+      const cond = state.alkaliCond === "A" ? r.condA : r.condB;
+
+      document.getElementById("alkaliCategoryTag").textContent = r.category;
+      document.getElementById("alkaliTitle").innerHTML = r.label;
+      document.getElementById("alkaliTrapTag").innerHTML = r.trap
+        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">⚠️ JEE TRAP</span>`
+        : "";
+
+      // Update Toggle Buttons text & active state
+      const btnA = document.getElementById("condBtnA");
+      const btnB = document.getElementById("condBtnB");
+      btnA.innerHTML = r.condALabel;
+      btnB.innerHTML = r.condBLabel;
+
+      if (state.alkaliCond === "A") {
+        btnA.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50";
+        btnB.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white border border-transparent";
+      } else {
+        btnB.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition bg-rose-500/20 text-rose-300 border border-rose-400/50";
+        btnA.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white border border-transparent";
+      }
+
+      document.getElementById("alkaliCondLabel").innerHTML = `Condition: ${cond.title}`;
+      document.getElementById("alkaliEquation").innerHTML = cond.equation;
+      document.getElementById("alkaliNote").innerHTML = cond.note;
+
+      // Badge color
+      const badgeStyles = {
+        emerald: "bg-emerald-500/15 text-emerald-300 border-emerald-500/35",
+        rose: "bg-rose-500/20 text-rose-300 border-rose-500/45 trap-pulse",
+        amber: "bg-amber-500/15 text-amber-300 border-amber-500/35",
+        cyan: "bg-cyan-500/15 text-cyan-300 border-cyan-500/35"
+      };
+      const badgeEl = document.getElementById("alkaliDispropBadge");
+      badgeEl.className = `px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badgeStyles[cond.badgeType] || badgeStyles.cyan}`;
+      badgeEl.innerHTML = cond.badge;
+
+      // Oxidation state chips
+      document.getElementById("alkaliOxStates").innerHTML = cond.oxStates.map(s => {
+        if (s === "→" || s === "+" || s === "|") {
+          return `<span class="text-slate-500 font-bold">${s}</span>`;
+        }
+        return `<span class="px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-cyan-200 font-semibold">${s}</span>`;
+      }).join("");
+    }
+
+    document.getElementById("condBtnA").addEventListener("click", () => {
+      state.alkaliCond = "A";
+      renderAlkaliChamber();
+    });
+    document.getElementById("condBtnB").addEventListener("click", () => {
+      state.alkaliCond = "B";
+      renderAlkaliChamber();
+    });
+
+    // -------------------------------------------------------------------
+    // 10. TAB 2: OXIDES MATRIX & OXOACIDS VAULT LOGIC
+    // -------------------------------------------------------------------
+    const NATURE_STYLES = {
+      amphoteric: { pill: "bg-amber-500/20 text-amber-300 border-amber-500/40", card: "border-amber-500/35 hover:border-amber-400", label: "⭐ Amphoteric" },
+      acidic:     { pill: "bg-rose-500/20 text-rose-300 border-rose-500/40",    card: "border-rose-500/30 hover:border-rose-400",   label: "Acidic" },
+      basic:      { pill: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40", card: "border-emerald-500/30 hover:border-emerald-400", label: "Basic" },
+      neutral:    { pill: "bg-violet-500/20 text-violet-300 border-violet-500/40", card: "border-violet-500/35 hover:border-violet-400", label: "Neutral" }
+    };
+
+    function renderOxides() {
+      const filtered = OXIDES_DATA.map((item, idx) => ({ ...item, origIdx: idx }))
+        .filter(item => state.oxideFilter === "all" || item.nature === state.oxideFilter);
+
+      // Ensure selected oxide is visible
+      if (!filtered.some(x => x.origIdx === state.selectedOxideIdx) && filtered.length > 0) {
+        state.selectedOxideIdx = filtered[0].origIdx;
+      }
+
+      const grid = document.getElementById("oxideGrid");
+      grid.innerHTML = filtered.map(ox => {
+        const st = NATURE_STYLES[ox.nature];
+        const isSel = ox.origIdx === state.selectedOxideIdx;
+        return `
+          <button data-oidx="${ox.origIdx}" class="oxide-card p-3 rounded-xl border text-left transition ${
+            isSel
+              ? "bg-cyan-500/20 border-cyan-300 shadow-lg shadow-cyan-500/15 scale-[1.02]"
+              : `bg-slate-900/80 ${st.card}`
+          }">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono text-slate-400">${ox.group}</span>
+              <span class="w-2 h-2 rounded-full ${
+                ox.nature === "amphoteric" ? "bg-amber-400" :
+                ox.nature === "acidic" ? "bg-rose-400" :
+                ox.nature === "basic" ? "bg-emerald-400" : "bg-violet-400"
+              }"></span>
+            </div>
+            <div class="font-mono font-extrabold text-sm sm:text-base text-white">${ox.sym}</div>
+            <div class="text-[10px] text-slate-400 truncate mt-0.5">${ox.name}</div>
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".oxide-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selectedOxideIdx = parseInt(btn.dataset.oidx, 10);
+          renderOxides();
+        });
+      });
+
+      // Render Detail Panel
+      const sel = OXIDES_DATA[state.selectedOxideIdx];
+      const st = NATURE_STYLES[sel.nature];
+      document.getElementById("oxideDetailPanel").innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono text-slate-400">${sel.group}</span>
+              <h3 class="text-2xl font-extrabold font-mono text-white mt-0.5">${sel.sym}</h3>
+              <p class="text-xs text-slate-300">${sel.name}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold border ${st.pill}">${st.label}</span>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-400 mb-1">Key Chemical Reaction</div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs text-slate-100 leading-relaxed">${sel.rxn}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-1">💡 JEE Quick Tip</div>
+            <p class="text-xs text-amber-100 leading-relaxed">${sel.tip}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll(".ox-filter").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.oxideFilter = btn.dataset.filter;
+        document.querySelectorAll(".ox-filter").forEach(b => {
+          if (b.dataset.filter === state.oxideFilter) {
+            b.className = "ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/50";
+          } else {
+            b.className = "ox-filter px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500";
+          }
+        });
+        renderOxides();
+      });
+    });
+
+    // Oxoacids Vault
+    function renderOxoacids() {
+      const famData = OXOACIDS_DATA[state.oxoFamily];
+      const pills = document.getElementById("oxoAcidPills");
+      pills.innerHTML = famData.acids.map(a => {
+        const isSel = a.id === state.selectedOxoAcidId;
+        return `
+          <button data-acid="${a.id}" class="oxo-acid-pill px-3.5 py-2 rounded-xl font-mono text-xs sm:text-sm font-bold transition border ${
+            isSel
+              ? "bg-emerald-500/20 text-emerald-200 border-emerald-400 shadow-sm"
+              : "bg-slate-900/80 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+          }">
+            ${a.formula}
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".oxo-acid-pill").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selectedOxoAcidId = btn.dataset.acid;
+          renderOxoacids();
+        });
+      });
+
+      const acid = famData.acids.find(a => a.id === state.selectedOxoAcidId) || famData.acids[0];
+      document.getElementById("oxoSvgTitle").textContent = acid.name;
+      document.getElementById("oxoSvgFormula").innerHTML = acid.formula;
+      document.getElementById("oxoSvgContainer").innerHTML = acid.svg;
+      document.getElementById("oxoFamilyOrder").innerHTML = famData.familyOrder;
+      document.getElementById("oxoJeeHighlight").innerHTML = acid.highlight;
+
+      document.getElementById("oxoStatBadges").innerHTML = `
+        <div class="p-3.5 rounded-xl bg-navy-950/80 border border-slate-800">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Oxidation State</div>
+          <div class="font-mono text-sm sm:text-base font-extrabold text-cyan-300 mt-1">${acid.oxState}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-navy-950/80 border border-slate-800">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Basicity (–OH Count)</div>
+          <div class="font-mono text-sm sm:text-base font-extrabold text-emerald-300 mt-1">${acid.basicity}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-navy-950/80 border border-slate-800">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bond Breakdown</div>
+          <div class="font-mono text-xs font-bold text-slate-200 mt-1">${acid.bonds}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-navy-950/80 border border-slate-800">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Special Feature</div>
+          <div class="text-xs font-bold text-amber-300 mt-1">${acid.special}</div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll(".oxo-fam-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.oxoFamily = btn.dataset.fam;
+        state.selectedOxoAcidId = OXOACIDS_DATA[state.oxoFamily].acids[0].id;
+        document.querySelectorAll(".oxo-fam-btn").forEach(b => {
+          b.className = b.dataset.fam === state.oxoFamily
+            ? "oxo-fam-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/50"
+            : "oxo-fam-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white";
+        });
+        renderOxoacids();
+      });
+    });
+
+    // -------------------------------------------------------------------
+    // 11. TAB 3: HINGLISH CHEAT-CODES RENDERER
+    // -------------------------------------------------------------------
+    function renderTricks() {
+      const grid = document.getElementById("tricksGrid");
+      const accentMap = {
+        amber: "border-amber-500/35 text-amber-300 bg-amber-500/10",
+        violet: "border-violet-500/35 text-violet-300 bg-violet-500/10",
+        rose: "border-rose-500/35 text-rose-300 bg-rose-500/10",
+        cyan: "border-cyan-500/35 text-cyan-300 bg-cyan-500/10",
+        emerald: "border-emerald-500/35 text-emerald-300 bg-emerald-500/10"
+      };
+
+      grid.innerHTML = TRICKS_DATA.map((t, idx) => `
+        <div class="glass-card rounded-2xl p-5 hover:border-cyan-400/50 transition cursor-pointer trick-card" data-tidx="${idx}">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${accentMap[t.accent]}">${t.badge}</span>
+            <span class="text-[11px] text-slate-400 font-semibold trick-toggle-text">Click for JEE Logic ▾</span>
+          </div>
+          <h3 class="text-base font-extrabold text-white mb-2">${t.title}</h3>
+          <p class="text-base sm:text-lg font-extrabold text-amber-300 leading-snug mb-3">${t.trick}</p>
+          <div class="px-3 py-2 rounded-xl bg-navy-950/85 border border-slate-800 font-mono text-xs text-cyan-200 font-bold">
+            ${t.formula}
+          </div>
+          <div class="trick-detail hidden mt-3 pt-3 border-t border-slate-800 text-xs sm:text-sm text-slate-300 leading-relaxed">
+            ${t.detail}
+          </div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll(".trick-card").forEach(card => {
+        card.addEventListener("click", () => {
+          const detail = card.querySelector(".trick-detail");
+          const toggleTxt = card.querySelector(".trick-toggle-text");
+          const isHidden = detail.classList.contains("hidden");
+          detail.classList.toggle("hidden");
+          toggleTxt.textContent = isHidden ? "Hide Logic ▴" : "Click for JEE Logic ▾";
+        });
+      });
+    }
+
+    // -------------------------------------------------------------------
+    // 12. TAB 4: JEE CHEMICAL REACTION DRILL (12 MCQs)
+    // -------------------------------------------------------------------
+    function renderQuizQuestion() {
+      const q = QUIZ_QUESTIONS[state.quizIdx];
+      state.quizAnswered = false;
+
+      document.getElementById("quizCounter").textContent = `${state.quizIdx + 1} / ${QUIZ_QUESTIONS.length}`;
+      document.getElementById("quizScore").textContent = state.quizScore;
+      document.getElementById("quizStreak").textContent = state.quizStreak;
+      document.getElementById("quizProgressBar").style.width = `${((state.quizIdx + 1) / QUIZ_QUESTIONS.length) * 100}%`;
+
+      document.getElementById("quizTopicTag").textContent = q.topic;
+      document.getElementById("quizQuestionText").innerHTML = q.q;
+      document.getElementById("quizFeedback").classList.add("hidden");
+      document.getElementById("quizNextBtn").classList.add("hidden");
+
+      const optsDiv = document.getElementById("quizOptions");
+      optsDiv.innerHTML = q.options.map((opt, idx) => `
+        <button data-opt="${idx}" class="quiz-opt-btn p-4 rounded-xl bg-slate-900/85 border border-slate-700 hover:border-cyan-400 hover:bg-slate-800/90 text-left text-xs sm:text-sm font-semibold text-slate-100 transition flex items-start gap-3">
+          <span class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center font-mono text-xs font-bold text-cyan-300 shrink-0">${String.fromCharCode(65 + idx)}</span>
+          <span class="leading-snug">${opt}</span>
+        </button>
+      `).join("");
+
+      document.querySelectorAll(".quiz-opt-btn").forEach(btn => {
+        btn.addEventListener("click", () => handleQuizAnswer(parseInt(btn.dataset.opt, 10)));
+      });
+    }
+
+    function handleQuizAnswer(selectedIdx) {
+      if (state.quizAnswered) return;
+      state.quizAnswered = true;
+
+      const q = QUIZ_QUESTIONS[state.quizIdx];
+      const isCorrect = selectedIdx === q.ans;
+
+      if (isCorrect) {
+        state.quizScore += 4;
+        state.quizStreak += 1;
+      } else {
+        state.quizScore = Math.max(0, state.quizScore - 1);
+        state.quizStreak = 0;
+      }
+
+      document.getElementById("quizScore").textContent = state.quizScore;
+      document.getElementById("quizStreak").textContent = state.quizStreak;
+
+      // Style Options
+      document.querySelectorAll(".quiz-opt-btn").forEach(btn => {
+        const idx = parseInt(btn.dataset.opt, 10);
+        btn.disabled = true;
+        if (idx === q.ans) {
+          btn.className = "quiz-opt-btn p-4 rounded-xl bg-emerald-500/20 border-2 border-emerald-400 text-left text-xs sm:text-sm font-bold text-emerald-100 flex items-start gap-3";
+        } else if (idx === selectedIdx && !isCorrect) {
+          btn.className = "quiz-opt-btn p-4 rounded-xl bg-rose-500/20 border-2 border-rose-400 text-left text-xs sm:text-sm font-bold text-rose-100 flex items-start gap-3";
+        } else {
+          btn.className = "quiz-opt-btn p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-left text-xs sm:text-sm text-slate-500 flex items-start gap-3 opacity-60";
+        }
+      });
+
+      // Show Feedback
+      const fb = document.getElementById("quizFeedback");
+      fb.classList.remove("hidden");
+      if (isCorrect) {
+        fb.className = "rounded-xl p-4 border bg-emerald-500/15 border-emerald-500/40 text-emerald-100 text-xs sm:text-sm space-y-1";
+        fb.innerHTML = `<div class="font-extrabold text-emerald-300">✅ +4 Marks! Sahi Jawab!</div><p>${q.exp}</p>`;
+      } else {
+        fb.className = "rounded-xl p-4 border bg-rose-500/15 border-rose-500/40 text-rose-100 text-xs sm:text-sm space-y-1";
+        fb.innerHTML = `<div class="font-extrabold text-rose-300">❌ -1 Mark! JEE Trap mein phans gaye!</div><p>${q.exp}</p>`;
+      }
+
+      const nextBtn = document.getElementById("quizNextBtn");
+      nextBtn.classList.remove("hidden");
+      nextBtn.textContent = state.quizIdx === QUIZ_QUESTIONS.length - 1 ? "View Final Score 🏆" : "Next Question →";
+    }
+
+    document.getElementById("quizNextBtn").addEventListener("click", () => {
+      if (state.quizIdx < QUIZ_QUESTIONS.length - 1) {
+        state.quizIdx += 1;
+        renderQuizQuestion();
+      } else {
+        document.getElementById("quizActiveView").classList.add("hidden");
+        document.getElementById("quizSummaryView").classList.remove("hidden");
+        const maxScore = QUIZ_QUESTIONS.length * 4;
+        document.getElementById("quizSummaryStats").textContent =
+          `Tumhara Final JEE Score: ${state.quizScore} / ${maxScore} Marks!`;
+        const gradeEl = document.getElementById("quizSummaryGrade");
+        if (state.quizScore >= 40) {
+          gradeEl.textContent = "🔥 AIR Ready! p-Block Chemical Properties Solid Hain!";
+        } else if (state.quizScore >= 24) {
+          gradeEl.textContent = "💪 Good Going! Ek baar Cheat-Codes revise karke 48/48 maaro!";
+        } else {
+          gradeEl.textContent = "🧪 Tab 1 & Tab 3 ek baar phir se explore karo, phir retry maaro!";
+        }
+      }
+    });
+
+    document.getElementById("quizRestartBtn").addEventListener("click", () => {
+      state.quizIdx = 0;
+      state.quizScore = 0;
+      state.quizStreak = 0;
+      document.getElementById("quizSummaryView").classList.add("hidden");
+      document.getElementById("quizActiveView").classList.remove("hidden");
+      renderQuizQuestion();
+    });
+
+    // -------------------------------------------------------------------
+    // 13. BOOTSTRAP APPLICATION
+    // -------------------------------------------------------------------
+    window.addEventListener("DOMContentLoaded", () => {
+      renderHalideButtons();
+      renderHalideChamber();
+      renderAlkaliList();
+      renderAlkaliChamber();
+      renderOxides();
+      renderOxoacids();
+      renderTricks();
+      renderQuizQuestion();
+    });
+  </script>
+</body>
+</html>
